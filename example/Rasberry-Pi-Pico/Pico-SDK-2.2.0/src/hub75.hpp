@@ -67,11 +67,14 @@ static_assert(CHAIN_COLS >= 1, "CHAIN_COLS must be >= 1");
 #ifndef DATA_N_PINS
 #define DATA_N_PINS 6 // count of consecutive color pins usually 6
 #endif
+#ifndef SWAP_RB_PINS
+#define SWAP_RB_PINS false // swap R/B data line mapping without changing physical GPIO order
+#endif
 #ifndef ROWSEL_BASE_PIN
-#define ROWSEL_BASE_PIN 6 // start gpio pin of address pins
+#define ROWSEL_BASE_PIN 6 // start gpio pin of row select pins
 #endif
 #ifndef ROWSEL_N_PINS
-#define ROWSEL_N_PINS 5 // count of consecutive address pins - adapt to the number of address pins of your panel
+#define ROWSEL_N_PINS 5 // count of consecutive row select pins - for SM5368 use A/B/C only
 #endif
 #ifndef PANEL_SCAN_DEPTH
 #define PANEL_SCAN_DEPTH 0 // 0 = derive from ROWSEL_N_PINS, otherwise use explicit scan depth such as 20 or 24
@@ -101,10 +104,11 @@ static_assert(CHAIN_COLS >= 1, "CHAIN_COLS must be >= 1");
 // #define HUB75                       // default - two rows lit simultaneously
 // #define HUB75_P10_3535_16X32_4S     // four rows lit simultaneously (can be defined via CMake)
 // #define HUB75_P3_1415_16S_64X64_S31 // four rows lit simultaneously
+// #define HUB75_SM5368_ABC            // SM5368 row shift-register mode: A=row clk, B=BK, C=row data
 //
 // Default to HUB75 if no multiplexing mode is defined
 // Only define default if none of the mapping modes are already defined
-#if !defined(HUB75) && !defined(HUB75_P10_3535_16X32_4S) && !defined(HUB75_P3_1415_16S_64X64_S31)
+#if !defined(HUB75) && !defined(HUB75_P10_3535_16X32_4S) && !defined(HUB75_P3_1415_16S_64X64_S31) && !defined(HUB75_SM5368_ABC)
 #define HUB75 // two or four rows lit simultaneously
 #endif
 
@@ -288,10 +292,16 @@ namespace PanelConfig
     constexpr uint32_t WIDTH = MATRIX_PANEL_WIDTH;
     constexpr uint32_t HEIGHT = MATRIX_PANEL_HEIGHT;
 
+#if defined(HUB75_SM5368_ABC)
+    constexpr bool ROWSEL_IS_SHIFT_REGISTER = true;
+#else
+    constexpr bool ROWSEL_IS_SHIFT_REGISTER = false;
+#endif
+
     // The number of address lines (A, B, C...) defines the multiplexing depth
     constexpr uint32_t ADDR_PINS = ROWSEL_N_PINS;
-    constexpr uint32_t ADDR_MASK = (1 << ADDR_PINS) - 1;
-    constexpr uint32_t MAX_SCAN_DEPTH = (1u << ADDR_PINS);
+    constexpr uint32_t ADDR_MASK = ROWSEL_IS_SHIFT_REGISTER ? 0u : ((1u << ADDR_PINS) - 1u);
+    constexpr uint32_t MAX_SCAN_DEPTH = ROWSEL_IS_SHIFT_REGISTER ? PANEL_SCAN_DEPTH : (1u << ADDR_PINS);
 
     // How many unique row addresses are sent to the panel.
     // By default this follows the binary address space (2^ADDR_PINS), but some
@@ -318,8 +328,10 @@ namespace PanelConfig
 
 static_assert(PANEL_SCAN_DEPTH >= 0, "PANEL_SCAN_DEPTH must be >= 0");
 static_assert(PanelConfig::SCAN_DEPTH >= 1, "Panel scan depth must be at least 1");
+#if !defined(HUB75_SM5368_ABC)
 static_assert(PanelConfig::SCAN_DEPTH <= PanelConfig::MAX_SCAN_DEPTH,
               "Panel scan depth exceeds addressable range of ROWSEL_N_PINS");
+#endif
 static_assert((MATRIX_PANEL_HEIGHT % PanelConfig::SCAN_DEPTH) == 0,
               "MATRIX_PANEL_HEIGHT must be divisible by panel scan depth");
 

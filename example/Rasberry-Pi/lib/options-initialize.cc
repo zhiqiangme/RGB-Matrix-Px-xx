@@ -53,6 +53,19 @@ typedef char** argv_iterator;
 #define OPTION_PREFIX     "--led-"
 #define OPTION_PREFIX_LEN strlen(OPTION_PREFIX)
 
+static const char kPanelType96x48Sm5368[] = "96X48_1_24_SM5368";
+
+static void ApplySpecialPanelProfile(RGBMatrix::Options *mopts) {
+  if (mopts->panel_type == NULL) return;
+  if (strcmp(mopts->panel_type, kPanelType96x48Sm5368) != 0) return;
+
+  // Keep the special row decoder scoped to this panel profile only.
+  mopts->rows = 48;
+  mopts->cols = 96;
+  mopts->row_address_type = 5;
+  mopts->led_rgb_sequence = "BGR";
+}
+
 static bool ConsumeBoolFlag(const char *flag_name, const argv_iterator &pos,
                             bool *result_value) {
   const char *option = *pos;
@@ -266,6 +279,8 @@ static bool FlagInit(int &argc, char **&argv,
     return false;
   }
 
+  ApplySpecialPanelProfile(mopts);
+
   if (remove_consumed_options) {
     // Success. Re-arrange flags to only include the ones not consumed.
     argc = (int) unused_options.size();
@@ -341,7 +356,7 @@ void PrintMatrixFlags(FILE *out, const RGBMatrix::Options &d,
           "\t--led-brightness=<percent>: Brightness in percent (Default: %d).\n"
           "\t--led-scan-mode=<0..1>    : 0 = progressive; 1 = interlaced "
           "(Default: %d).\n"
-          "\t--led-row-addr-type=<0..4>: 0 = default; 1 = AB-addressed panels; 2 = direct row select; 3 = ABC-addressed panels; 4 = ABC Shift + DE direct "
+          "\t--led-row-addr-type=<0..5>: 0 = default; 1 = AB-addressed panels; 2 = direct row select; 3 = ABC-addressed panels; 4 = ABC Shift + DE direct; 5 = SM5368/B707 shift register "
           "(Default: 0).\n"
           "\t--led-%sshow-refresh        : %show refresh rate.\n"
           "\t--led-limit-refresh=<Hz>  : Limit refresh rate to this frequency in Hz. Useful to keep a\n"
@@ -355,7 +370,7 @@ void PrintMatrixFlags(FILE *out, const RGBMatrix::Options &d,
           "\t--led-pwm-dither-bits=<0..2> : Time dithering of lower bits "
           "(Default: 0)\n"
           "\t--led-%shardware-pulse   : %sse hardware pin-pulse generation.\n"
-          "\t--led-panel-type=<name>   : Needed to initialize special panels. Supported: 'FM6126A', 'FM6127'\n"
+          "\t--led-panel-type=<name>   : Needed to initialize special panels. Supported: 'FM6126A', 'FM6127', '96X48_1_24_SM5368'\n"
           "\t--led-%sbusy-waiting     : %sse busy waiting when limiting refresh rate.\n",
           d.hardware_mapping,
           d.rows, d.cols, d.chain_length, d.parallel,
@@ -436,7 +451,7 @@ bool RGBMatrix::Options::Validate(std::string *err_in) const {
   }
 
   if (row_address_type < 0 || row_address_type > 5) {
-    err->append("Row address type values can be 0 (default), 1 (AB addressing), 2 (direct row select), 3 (ABC address), 4 (ABC Shift + DE direct), 5 (Test row select).\n");
+    err->append("Row address type values can be 0 (default), 1 (AB addressing), 2 (direct row select), 3 (ABC address), 4 (ABC Shift + DE direct), 5 (SM5368/B707 shift register).\n");
     success = false;
   }
 

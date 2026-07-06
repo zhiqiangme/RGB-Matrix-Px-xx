@@ -37,6 +37,12 @@ typedef uint16_t PortType;
 typedef uint32_t PortType; // Formerly 'RwReg' but interfered w/CMCIS header
 #endif
 
+enum RGBmatrixPanelOption : uint8_t {
+  RGBMATRIX_PANEL_OPTION_NONE = 0x00,
+  RGBMATRIX_PANEL_OPTION_SM5368_ABC = 0x01,
+  RGBMATRIX_PANEL_OPTION_SWAP_RB = 0x02,
+};
+
 /*!
     @brief  Class encapsulating RGB LED matrix functionality.
 */
@@ -62,6 +68,8 @@ public:
                  ,
                  uint8_t *pinlist = NULL
 #endif
+                 ,
+                 uint8_t panelOptions = RGBMATRIX_PANEL_OPTION_NONE
   );
 
   /*!
@@ -86,6 +94,8 @@ public:
                  ,
                  uint8_t *pinlist = NULL
 #endif
+                 ,
+                 uint8_t panelOptions = RGBMATRIX_PANEL_OPTION_NONE
   );
 
   /*!
@@ -111,6 +121,8 @@ public:
                  ,
                  uint8_t *pinlist = NULL
 #endif
+                 ,
+                 uint8_t panelOptions = RGBMATRIX_PANEL_OPTION_NONE
   );
 
   /*!
@@ -137,6 +149,8 @@ public:
                  ,
                  uint8_t *pinlist = NULL
 #endif
+                 ,
+                 uint8_t panelOptions = RGBMATRIX_PANEL_OPTION_NONE
   );
   
   /*!
@@ -292,7 +306,12 @@ private:
             ,
             uint8_t *rgbpins
 #endif
+            ,
+            uint8_t panelOptions
   );
+  void setRowAddressBinary(uint8_t currentRow);
+  void setRowAddressSM5368(uint8_t currentRow);
+  bool hasPanelOption(uint8_t option) const;
 
   uint8_t _clk;       ///< RGB clock pin number
   uint8_t _lat;       ///< RGB latch pin number
@@ -341,6 +360,7 @@ private:
   volatile uint8_t row;      ///< Row counter for interrupt handler
   volatile uint8_t plane;    ///< Bitplane counter for interrupt handler
   volatile uint8_t *buffptr; ///< Current RGB pointer for interrupt handler
+  uint8_t panelOptions;      ///< Optional panel behavior flags
 };
 
 #endif // RGBMATRIXPANEL_H

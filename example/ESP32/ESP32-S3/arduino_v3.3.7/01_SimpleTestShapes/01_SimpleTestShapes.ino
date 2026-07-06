@@ -136,6 +136,7 @@ void drawText(int colorWheelOffset)
 
 void setup() {
 
+
   // Module configuration
   HUB75_I2S_CFG mxconfig(
     PANEL_RES_X,   // module width
@@ -145,8 +146,9 @@ void setup() {
 
   mxconfig.gpio.e = 9;
   mxconfig.clkphase = false;
-  mxconfig.driver = HUB75_I2S_CFG::FM6126A;
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;   
+  mxconfig.driver = HUB75_I2S_CFG::SHIFTREG;
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+  mxconfig.line_decoder = HUB75_I2S_CFG::SM5368;
   mxconfig.min_refresh_rate = 240; 
   // Display Setup
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
@@ -159,7 +161,7 @@ void setup() {
   myRED = dma_display->color565(255, 0, 0);
   myGREEN = dma_display->color565(0, 255, 0);
   myBLUE = dma_display->color565(0, 0, 255);
-  
+
 
   dma_display->fillScreen(myWHITE);
   

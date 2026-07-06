@@ -40,11 +40,23 @@
 #define Matrix_Width 96
 #define Matrix_Height 48
 
+#define HUB75_PANEL_STANDARD 1
+#define HUB75_PANEL_96X48_1_24_SM5368 1
+#define CONFIG_HUB75_PANEL_MODE HUB75_PANEL_STANDARD
+
+#if CONFIG_HUB75_PANEL_MODE == HUB75_PANEL_96X48_1_24_SM5368
+#define CONFIG_HUB75_PANEL_OPTIONS                                             \
+  (RGBMATRIX_PANEL_OPTION_SM5368_ABC | RGBMATRIX_PANEL_OPTION_SWAP_RB)
+#else
+#define CONFIG_HUB75_PANEL_OPTIONS RGBMATRIX_PANEL_OPTION_NONE
+#endif
+
 uint8_t hub75_rgb_pins[] = { CONFIG_HUB75_PIN_R1, CONFIG_HUB75_PIN_G1,
                              CONFIG_HUB75_PIN_B1, CONFIG_HUB75_PIN_R2,
                              CONFIG_HUB75_PIN_G2, CONFIG_HUB75_PIN_B2 };
 RGBmatrixPanel matrix(A, B, C, D, E, CLK, LAT, OE, false, Matrix_Width,
-                      Matrix_Height / 2, hub75_rgb_pins);
+                     Matrix_Height / 2, hub75_rgb_pins,
+                     CONFIG_HUB75_PANEL_OPTIONS);
 
 static void panel_delay(uint32_t ms) {
   uint32_t start_ms = millis();

@@ -151,6 +151,8 @@ void RGBmatrixPanel::init(uint8_t rows, uint8_t a, uint8_t b, uint8_t c,
                           ,
                           uint8_t *pinlist
 #endif
+                          ,
+                          uint8_t options
 ) {
 #if defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_ESP32) || defined(ARDUINO_ARCH_RENESAS)
   // R1, G1, B1, R2, G2, B2 pins
@@ -188,6 +190,7 @@ void RGBmatrixPanel::init(uint8_t rows, uint8_t a, uint8_t b, uint8_t c,
   _clk = clk;
   _lat = lat;
   _oe = oe;
+  panelOptions = options;
 
   // Look up port registers and pin masks ahead of time,
   // avoids many slow digitalWrite() calls later.
@@ -218,6 +221,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t clk,
                                ,
                                uint8_t *pinlist
 #endif
+                               ,
+                               uint8_t panelOptions
                                )
     : Adafruit_GFX(32, 16) {
   init(8, a, b, c, clk, lat, oe, dbuf, 32
@@ -225,6 +230,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t clk,
        ,
        pinlist
 #endif
+       ,
+       panelOptions
   );
 }
 
@@ -236,6 +243,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
                                ,
                                uint8_t *pinlist
 #endif
+                               ,
+                               uint8_t panelOptions
                                )
     : Adafruit_GFX(width, 32) {
 
@@ -244,6 +253,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
        ,
        pinlist
 #endif
+       ,
+       panelOptions
   );
 
   // Init a few extra 32x32-specific elements:
@@ -260,6 +271,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8
                                ,
                                uint8_t *pinlist
 #endif
+                               ,
+                               uint8_t panelOptions
                                )
     : Adafruit_GFX(width, 64) {
 
@@ -268,6 +281,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8
        ,
        pinlist
 #endif
+       ,
+       panelOptions
   );
 
   // Init a few extra 32-specific elements:
@@ -290,6 +305,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
                                ,
                                uint8_t *pinlist
 #endif
+                               ,
+                               uint8_t panelOptions
                                )
     : Adafruit_GFX(width, rows * 2) {
 
@@ -298,6 +315,8 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
        ,
        pinlist
 #endif
+       ,
+       panelOptions
   );
 
   _d = d;
@@ -306,6 +325,10 @@ RGBmatrixPanel::RGBmatrixPanel(uint8_t a, uint8_t b, uint8_t c, uint8_t d,
   _e = e;
   addreport = portOutputRegister(digitalPinToPort(e));
   addremask = digitalPinToBitMask(e);
+}
+
+bool RGBmatrixPanel::hasPanelOption(uint8_t option) const {
+  return (panelOptions & option) != 0;
 }
 
 #if defined(ARDUINO_ARCH_SAMD)
@@ -336,11 +359,11 @@ void RGBmatrixPanel::begin(void) {
   *addrbport &= ~addrbmask; // Low
   pinMode(_c, OUTPUT);
   *addrcport &= ~addrcmask; // Low
-  if (nRows > 8) {
+  if (!hasPanelOption(RGBMATRIX_PANEL_OPTION_SM5368_ABC) && (nRows > 8)) {
     pinMode(_d, OUTPUT);
     *addrdport &= ~addrdmask; // Low
   }
-  if (nRows > 16) {
+  if (!hasPanelOption(RGBMATRIX_PANEL_OPTION_SM5368_ABC) && (nRows > 16)) {
     pinMode(_e, OUTPUT);
     *addreport &= ~addremask; // Low
   }
@@ -827,6 +850,11 @@ void RGBmatrixPanel::drawPixel(int16_t x, int16_t y, uint16_t c) {
   r = c >> 12 ;        // RRRRrggggggbbbbb
   g = (c >> 7) & 0xF; // rrrrrGGGGggbbbbb
   b = (c >> 1) & 0xF; // rrrrrggggggBBBBb
+  if (hasPanelOption(RGBMATRIX_PANEL_OPTION_SWAP_RB)) {
+    uint8_t rb = r;
+    r = b;
+    b = rb;
+  }
 
   // Loop counter stuff
   bit = 2;
@@ -1032,6 +1060,58 @@ IRAM_ATTR void IRQ_HANDLER(void *arg) {
 #ifndef LOOPTIME
 #define LOOPTIME 200
 #endif
+
+void RGBmatrixPanel::setRowAddressBinary(uint8_t currentRow) {
+  if (currentRow & 0x1) {
+    *addraport |= addramask;
+  } else {
+    *addraport &= ~addramask;
+  }
+  delayMicroseconds(ADDR_SETTLE_US);
+  if (currentRow & 0x2) {
+    *addrbport |= addrbmask;
+  } else {
+    *addrbport &= ~addrbmask;
+  }
+  delayMicroseconds(ADDR_SETTLE_US);
+  if (currentRow & 0x4) {
+    *addrcport |= addrcmask;
+  } else {
+    *addrcport &= ~addrcmask;
+  }
+  delayMicroseconds(ADDR_SETTLE_US);
+  if (nRows > 8) {
+    if (currentRow & 0x8) {
+      *addrdport |= addrdmask;
+    } else {
+      *addrdport &= ~addrdmask;
+    }
+    delayMicroseconds(ADDR_SETTLE_US);
+  }
+  if (nRows > 16) {
+    if (currentRow & 0x10) {
+      *addreport |= addremask;
+    } else {
+      *addreport &= ~addremask;
+    }
+    delayMicroseconds(ADDR_SETTLE_US);
+  }
+}
+
+void RGBmatrixPanel::setRowAddressSM5368(uint8_t currentRow) {
+  PortType rowDataMask = (currentRow == 0) ? addrcmask : 0;
+  *addraport &= ~addramask;
+  *addrbport |= addrbmask;
+  if (rowDataMask != 0) {
+    *addrcport |= addrcmask;
+  } else {
+    *addrcport &= ~addrcmask;
+  }
+  delayMicroseconds(ADDR_SETTLE_US);
+  *addraport |= addramask;
+  delayMicroseconds(ADDR_SETTLE_US);
+}
+
 // The "on" time for bitplane 0 (with the shortest BCM interval) can
 // then be estimated as LOOPTIME + CALLOVERHEAD * 2.  Each successive
 // bitplane then doubles the prior amount of time.  We can then
@@ -1110,35 +1190,10 @@ void RGBmatrixPanel::updateDisplay(void) {
   } else if (plane == 1) {
     // Plane 0 was loaded on prior interrupt invocation and is about to
     // latch now, so update the row address lines before we do that:
-    if (row & 0x1)
-      *addraport |= addramask;
-    else
-      *addraport &= ~addramask;
-    // MYSTERY: certain matrices REQUIRE these delays ???
-    delayMicroseconds(ADDR_SETTLE_US);
-    if (row & 0x2)
-      *addrbport |= addrbmask;
-    else
-      *addrbport &= ~addrbmask;
-    delayMicroseconds(ADDR_SETTLE_US);
-    if (row & 0x4)
-      *addrcport |= addrcmask;
-    else
-      *addrcport &= ~addrcmask;
-    delayMicroseconds(ADDR_SETTLE_US);
-    if (nRows > 8) {
-      if (row & 0x8)
-        *addrdport |= addrdmask;
-      else
-        *addrdport &= ~addrdmask;
-      delayMicroseconds(ADDR_SETTLE_US);
-    }
-    if (nRows > 16) {
-      if (row & 0x10)
-        *addreport |= addremask;
-      else
-        *addreport &= ~addremask;
-      delayMicroseconds(ADDR_SETTLE_US);
+    if (hasPanelOption(RGBMATRIX_PANEL_OPTION_SM5368_ABC)) {
+      setRowAddressSM5368(row);
+    } else {
+      setRowAddressBinary(row);
     }
   }
 
