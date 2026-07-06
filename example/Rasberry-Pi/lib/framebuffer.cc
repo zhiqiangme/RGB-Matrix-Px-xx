@@ -170,6 +170,7 @@ private:
   gpio_bits_t row_lookup_[32];
 };
 
+// SM5368/B707-style row selector: A=clock, B=BK, C=data.
 class B707ShiftRegisterRowAddressSetter : public RowAddressSetter {
 public:
   B707ShiftRegisterRowAddressSetter(int double_rows, const HardwareMapping &h)

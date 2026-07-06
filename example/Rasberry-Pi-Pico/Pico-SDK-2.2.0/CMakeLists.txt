@@ -61,12 +61,15 @@ else()
     set(BALANCED_LIGHT_OUTPUT_VALUE true)
 endif()
 
+set(SWAP_RB_PINS_VALUE false)
+
 set(PANEL_PROFILE "64X32_1_16" CACHE STRING "Hub75 panel profile")
 set_property(CACHE PANEL_PROFILE PROPERTY STRINGS
     "64X32_1_16"
     "64X64_1_32"
     "80X40_1_20"
     "96X48_1_24"
+    "96X48_1_24_SM5368"
 )
 
 if(PANEL_PROFILE STREQUAL "64X64_1_32")
@@ -93,6 +96,13 @@ elseif(PANEL_PROFILE STREQUAL "96X48_1_24")
     set(ROWSEL_N_PINS_VALUE 5)
     set(PANEL_SCAN_DEPTH_VALUE 24)
     set(PANEL_DEFINE_VALUE HUB75)
+elseif(PANEL_PROFILE STREQUAL "96X48_1_24_SM5368")
+    set(MATRIX_PANEL_WIDTH_VALUE 96)
+    set(MATRIX_PANEL_HEIGHT_VALUE 48)
+    set(ROWSEL_N_PINS_VALUE 3)
+    set(PANEL_SCAN_DEPTH_VALUE 24)
+    set(PANEL_DEFINE_VALUE HUB75_SM5368_ABC)
+    set(SWAP_RB_PINS_VALUE true)
 else()
     message(FATAL_ERROR "Unsupported PANEL_PROFILE: ${PANEL_PROFILE}")
 endif()
@@ -112,13 +122,13 @@ target_compile_definitions(hub75 PRIVATE
     CHAIN_ROWS=1                # number of chain rows stacked vertically (rows)
     DATA_BASE_PIN=0             # base GPIO pin (aka start index) of R0, G0, B0, R1, G1, B1 GPIO pins
     DATA_N_PINS=6               # number (count) of colour pins (usually 6)
-    ROWSEL_BASE_PIN=6           # base GPIO address pin (aka start index) of A, B (, C, D. E) GPIO pins
-    ROWSEL_N_PINS=${ROWSEL_N_PINS_VALUE}             # address pin count from PANEL_PROFILE
+    SWAP_RB_PINS=${SWAP_RB_PINS_VALUE}               # swap R/B data pin mapping in software
+    ROWSEL_BASE_PIN=6           # base GPIO row select pin (aka start index) of A, B (, C, D. E) GPIO pins
+    ROWSEL_N_PINS=${ROWSEL_N_PINS_VALUE}             # row select pin count from PANEL_PROFILE
     PANEL_SCAN_DEPTH=${PANEL_SCAN_DEPTH_VALUE}       # scan depth from PANEL_PROFILE
     CLK_PIN=11                  # GPIO pin for CLK 
     STROBE_PIN=12               # GPIO pin for STROBE (LATCH)
     OEN_PIN=13                  # GPIO for OE pin
-    PANEL=${PANEL_DEFINE_VALUE} # mapping from PANEL_PROFILE
     PANEL_TYPE=PANEL_GENERIC    # select PANEL_TYPE
     INVERTED_STB=false          # inverted pin signal for OE (untested)
     SM_CLOCKDIV_FACTOR=2.0f     # to prevent flicker or ghosting it might be worth a try to reduce state machine speed
@@ -133,6 +143,8 @@ target_compile_definitions(hub75 PRIVATE
     HUB75_MULTICORE=true        # use core1 for the hub75 driver
     FRAME_RATE=false            # for testing and debugging purpose only: output frame rate information (printf) in monitor - set to `false` for production
 )
+
+target_compile_definitions(hub75 PRIVATE ${PANEL_DEFINE_VALUE})
 
 # Generate PIO header
 pico_generate_pio_header(hub75 ${CMAKE_CURRENT_LIST_DIR}/src/hub75.pio)
@@ -182,4 +194,3 @@ target_include_directories(hub75 PRIVATE
 )
 
 pico_add_extra_outputs(hub75)
-

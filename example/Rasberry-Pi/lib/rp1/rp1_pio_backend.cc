@@ -153,6 +153,8 @@ static uint32_t CollectAddressMask(const HardwareMapping &h, int double_rows,
   }
   case 2:
     return h.a | h.b | h.c | h.d;
+  case 5:
+    return h.a | h.b | h.c;
   default:
     return 0;
   }
@@ -175,6 +177,10 @@ static bool IsSingleBit(uint64_t bits) {
   return bits != 0 && (bits & (bits - 1)) == 0;
 }
 
+static bool IsSm5368RowAddressType(int row_address_type) {
+  return row_address_type == 5;
+}
+
 static uint32_t CalcRowAddressBits(const HardwareMapping &h,
                                    int row_address_type, int row) {
   switch (row_address_type) {
@@ -194,9 +200,29 @@ static uint32_t CalcRowAddressBits(const HardwareMapping &h,
     case 2: return h.a | h.b | h.d;
     default: return h.a | h.b | h.c;
     }
+  case 5:
+    return row == 0 ? static_cast<uint32_t>(h.c) : 0;
   default:
     return 0;
   }
+}
+
+static void AppendDelay(std::vector<uint32_t> *buffer, uint32_t pins,
+                        int clock_cycles);
+
+static void AppendSm5368RowSelect(std::vector<uint32_t> *buffer,
+                                  const HardwareMapping &h,
+                                  uint32_t output_enable_bit,
+                                  int row) {
+  const uint32_t data_bit = row == 0 ? static_cast<uint32_t>(h.c) : 0;
+  const uint32_t phase0 =
+      output_enable_bit | static_cast<uint32_t>(h.b) | data_bit;
+  const uint32_t phase1 = phase0 | static_cast<uint32_t>(h.a);
+  const uint32_t settle = output_enable_bit | data_bit;
+
+  AppendDelay(buffer, phase0, 0);
+  AppendDelay(buffer, phase1, 0);
+  AppendDelay(buffer, settle, kPostAddressDelayClocks);
 }
 
 static int DisplayRowFromLoop(int row_loop, int double_rows, int scan_mode) {
@@ -435,7 +461,10 @@ bool Rp1PioConfigSupported(const char *hardware_mapping, int row_address_type,
                            int parallel) {
   if (!Rp1PioPlatformDetected()) return false;
   if (!MappingNameSupported(hardware_mapping)) return false;
-  if (!(row_address_type == 0 || row_address_type == 2)) return false;
+  if (!(row_address_type == 0 || row_address_type == 2
+        || IsSm5368RowAddressType(row_address_type))) {
+    return false;
+  }
   return parallel >= 1 && parallel <= 3;
 }
 
@@ -493,6 +522,7 @@ void Rp1PioInitOrDie(const HardwareMapping &mapping, int double_rows, int parall
 void Rp1PioInitializePanels(const HardwareMapping &mapping,
                             const char *panel_type, int columns) {
   if (!s_pio_state.active || panel_type == NULL || *panel_type == '\0') return;
+  if (strcmp(panel_type, "96X48_1_24_SM5368") == 0) return;
 
   if (strncasecmp(panel_type, "fm6126", 6) == 0) {
     SendFM6126Init(mapping, columns);
@@ -556,7 +586,10 @@ void Rp1PioDumpFramebuffer(Framebuffer *framebuffer, int pwm_low_bit) {
                     remaining_overlap_words * kClocksPerDataWord);
       }
 
-      if (current_addr != previous_addr) {
+      if (IsSm5368RowAddressType(state.row_address_type) && bit == start_bit) {
+        AppendSm5368RowSelect(&state.transfer_buffer, h, state.output_enable_bit,
+                              display_row);
+      } else if (current_addr != previous_addr) {
         AppendDelay(&state.transfer_buffer,
                     current_addr | state.output_enable_bit,
                     kPostAddressDelayClocks);
