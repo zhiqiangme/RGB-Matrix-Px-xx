@@ -208,6 +208,8 @@ static uint32_t CollectAddressMask(const HardwareMapping &h, int double_rows,
   }
   case 2:
     return h.a | h.b | h.c | h.d;
+  case 5:
+    return h.a | h.b | h.c;
   default:
     return 0;
   }
@@ -228,6 +230,10 @@ static bool FitsInRioWord(uint64_t bits) {
 
 static bool IsSingleBit(uint64_t bits) {
   return bits != 0 && (bits & (bits - 1)) == 0;
+}
+
+static bool IsSm5368RowAddressType(int row_address_type) {
+  return row_address_type == 5;
 }
 
 static bool ValidatePinBits(const char *label, uint64_t bits) {
@@ -294,6 +300,12 @@ static bool ValidateMappingSignals(const HardwareMapping &h, int double_rows,
         || !ValidatePinBits("address D", h.d)) {
       return false;
     }
+  } else if (IsSm5368RowAddressType(row_address_type)) {
+    if (!ValidatePinBits("address A", h.a)
+        || !ValidatePinBits("address B", h.b)
+        || !ValidatePinBits("address C", h.c)) {
+      return false;
+    }
   }
   return true;
 }
@@ -317,9 +329,29 @@ static uint32_t CalcRowAddressBits(const HardwareMapping &h,
     case 2: return h.a | h.b | h.d;
     default: return h.a | h.b | h.c;
     }
+  case 5:
+    return row == 0 ? static_cast<uint32_t>(h.c) : 0;
   default:
     return 0;
   }
+}
+
+static void WriteSm5368RowSelect(Rp1RioState &state,
+                                 const HardwareMapping &h,
+                                 int row) {
+  const uint32_t data_bit = row == 0 ? static_cast<uint32_t>(h.c) : 0;
+  const uint32_t phase0 = state.output_enable_bit
+                          | static_cast<uint32_t>(h.b)
+                          | data_bit;
+  const uint32_t phase1 = phase0 | static_cast<uint32_t>(h.a);
+  const uint32_t settle = state.output_enable_bit | data_bit;
+
+  state.rio_out->Out = phase0;
+  ClockSetupDelay(state.gpio_slowdown);
+  state.rio_out->Out = phase1;
+  ClockSetupDelay(state.gpio_slowdown);
+  state.rio_out->Out = settle;
+  ClockSetupDelay(state.gpio_slowdown);
 }
 
 static int DisplayRowFromLoop(int row_loop, int double_rows, int scan_mode) {
@@ -504,7 +536,10 @@ bool Rp1RioShouldActivate(const char *hardware_mapping, int row_address_type,
   if (!s_rio_requested) return false;
   if (!Rp1RioPlatformDetected()) return false;
   if (!MappingNameSupported(hardware_mapping)) return false;
-  if (!(row_address_type == 0 || row_address_type == 2)) return false;
+  if (!(row_address_type == 0 || row_address_type == 2
+        || IsSm5368RowAddressType(row_address_type))) {
+    return false;
+  }
   return parallel >= 1 && parallel <= 3;
 }
 
@@ -561,6 +596,7 @@ void Rp1RioInitOrDie(const HardwareMapping &mapping, int double_rows,
 void Rp1RioInitializePanels(const HardwareMapping &mapping,
                             const char *panel_type, int columns) {
   if (!s_rio_state.active || panel_type == NULL || *panel_type == '\0') return;
+  if (strcmp(panel_type, "96X48_1_24_SM5368") == 0) return;
 
   if (strncasecmp(panel_type, "fm6126", 6) == 0) {
     SendFM6126Init(mapping, columns);
@@ -618,6 +654,9 @@ void Rp1RioDumpFramebuffer(Framebuffer *framebuffer, int pwm_low_bit) {
         BusyWaitWords(remaining_overlap_words);
       }
 
+      if (IsSm5368RowAddressType(state.row_address_type) && bit == start_bit) {
+        WriteSm5368RowSelect(state, h, display_row);
+      }
       state.rio_out->Out = current_addr | state.output_enable_bit;
       ClockSetupDelay(state.gpio_slowdown);
       state.rio_out->Out =

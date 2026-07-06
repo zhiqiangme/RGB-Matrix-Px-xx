@@ -247,8 +247,22 @@ static inline void compute_bcm_cycles(uint32_t bitplane, uint32_t brightness_fp,
 
 static inline uint32_t encode_row_address(uint32_t row)
 {
+#if defined(HUB75_SM5368_ABC)
+    constexpr uint32_t ROW_CLK = 1u << 0u;  // A
+    constexpr uint32_t ROW_BK = 1u << 1u;   // B
+    constexpr uint32_t ROW_DATA = 1u << 2u; // C
+
+    // SM5368 uses a one-hot row shift register:
+    // row 0 injects a '1', all following rows clock that bit forward.
+    uint32_t data_bit = (row == 0u) ? ROW_DATA : 0u;
+    uint32_t phase0 = ROW_BK | data_bit;
+    uint32_t phase1 = ROW_CLK | ROW_BK | data_bit;
+
+    return phase0 | (phase1 << 3u);
+#else
     // Address lines masked depending on ROWSEL_N_PINS
     return row & PanelConfig::ADDR_MASK;
+#endif
 }
 
 static inline uint ns_to_pio_cycles(uint32_t ns, float clk_sys_hz, float clkdiv)
@@ -732,6 +746,32 @@ static void configure_pio(bool inverted_stb)
         panic("Failed to claim PIO SM for hub75_bitplane_stream_program\n");
     }
 
+#if defined(HUB75_SM5368_ABC)
+    if (inverted_stb)
+    {
+        if (!pio_claim_free_sm_and_add_program_for_gpio_range(
+                &hub75_row_sm5368_abc_inverted_program,
+                &pio_config.row_pio,
+                &pio_config.sm_row,
+                &pio_config.row_prog_offs,
+                ROWSEL_BASE_PIN, ROWSEL_N_PINS + 2, true))
+        {
+            panic("Failed to claim PIO SM for hub75_row_sm5368_abc_inverted_program\n");
+        }
+    }
+    else
+    {
+        if (!pio_claim_free_sm_and_add_program_for_gpio_range(
+                &hub75_row_sm5368_abc_program,
+                &pio_config.row_pio,
+                &pio_config.sm_row,
+                &pio_config.row_prog_offs,
+                ROWSEL_BASE_PIN, ROWSEL_N_PINS + 2, true))
+        {
+            panic("Failed to claim PIO SM for hub75_row_sm5368_abc_program\n");
+        }
+    }
+#else
     if (inverted_stb)
     {
         if (!pio_claim_free_sm_and_add_program_for_gpio_range(
@@ -756,15 +796,23 @@ static void configure_pio(bool inverted_stb)
             panic("Failed to claim PIO SM for hub75_row_program\n");
         }
     }
+#endif
 
     hub75_bitplane_stream_program_init(pio_config.data_pio, pio_config.sm_data, pio_config.data_prog_offs, DATA_BASE_PIN, CLK_PIN, PanelConfig::BITPLANE_STREAM_LENGTH);
 
     // Implementation of Pimoronis anti ghosting solution: https://github.com/pimoroni/pimoroni-pico/commit/9e7c2640d426f7b97ca2d5e9161d3f0a00f21abf
     // base_latch_wait_cycles passed as parameter to hub75_row program
+#if defined(HUB75_SM5368_ABC)
+    if (inverted_stb)
+        hub75_row_sm5368_abc_inverted_program_init(pio_config.row_pio, pio_config.sm_row, pio_config.row_prog_offs, ROWSEL_BASE_PIN, ROWSEL_N_PINS, STROBE_PIN, hub75_timing_config.latch_cycles);
+    else
+        hub75_row_sm5368_abc_program_init(pio_config.row_pio, pio_config.sm_row, pio_config.row_prog_offs, ROWSEL_BASE_PIN, ROWSEL_N_PINS, STROBE_PIN, hub75_timing_config.latch_cycles);
+#else
     if (inverted_stb)
         hub75_row_inverted_program_init(pio_config.row_pio, pio_config.sm_row, pio_config.row_prog_offs, ROWSEL_BASE_PIN, ROWSEL_N_PINS, STROBE_PIN, hub75_timing_config.latch_cycles);
     else
         hub75_row_program_init(pio_config.row_pio, pio_config.sm_row, pio_config.row_prog_offs, ROWSEL_BASE_PIN, ROWSEL_N_PINS, STROBE_PIN, hub75_timing_config.latch_cycles);
+#endif
 
     // State machine for "parallelized" building of the bit-plane structure
     if (!pio_claim_free_sm_and_add_program(
@@ -919,7 +967,11 @@ static inline uint32_t pack_lut_rgb(uint32_t colour)
     uint32_t gv = CIE_GREEN[(colour >> 8u) & 0xFFu];
     uint32_t bv = CIE_BLUE[colour & 0xFFu];
     CCM_APPLY(rv, gv, bv);
+#if SWAP_RB_PINS
+    return (rv << 20u) | (gv << 10u) | bv;
+#else
     return (bv << 20u) | (gv << 10u) | rv;
+#endif
 }
 
 // Helper: apply LUT and pack into 30-bit RGB (10 bits per channel)
@@ -929,10 +981,14 @@ static inline uint32_t pack_lut_rgb_(uint8_t r, uint8_t g, uint8_t b)
     uint32_t gv = CIE_GREEN[g];
     uint32_t bv = CIE_BLUE[b];
     CCM_APPLY(rv, gv, bv);
+#if SWAP_RB_PINS
+    return (rv << 20u) | (gv << 10u) | bv;
+#else
     return (bv << 20u) | (gv << 10u) | rv;
+#endif
 }
 
-#if defined(HUB75) || defined(HUB75_P3_1415_16S_64X64_S31)
+#if defined(HUB75) || defined(HUB75_SM5368_ABC) || defined(HUB75_P3_1415_16S_64X64_S31)
 /**
  * @brief Calculate offset for current row in panel with coordinatres (v, h) in positive or negative (´reverse´) direction,
  *
@@ -984,7 +1040,7 @@ __attribute__((optimize("unroll-loops"))) void update(
 
     __attribute__((aligned(4))) uint32_t const *src = static_cast<uint32_t const *>(graphics->frame_buffer);
 
-#if defined(HUB75)
+#if defined(HUB75) || defined(HUB75_SM5368_ABC)
 #if CHAIN_COLS == 1 && CHAIN_ROWS == 1
     int32_t fb_index = 0;
 
@@ -1267,7 +1323,7 @@ __attribute__((optimize("unroll-loops"))) void update(
  */
 __attribute__((optimize("unroll-loops"))) void update_bgr(const uint8_t *src)
 {
-#if defined(HUB75)
+#if defined(HUB75) || defined(HUB75_SM5368_ABC)
 #if CHAIN_COLS == 1 && CHAIN_ROWS == 1
     constexpr int32_t triple_stride_to_paired_row = 3 * PanelConfig::stride_to_paired_row;
 

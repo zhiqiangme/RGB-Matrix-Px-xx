@@ -9,7 +9,7 @@
 #if (HUB75_SCAN_ROWS > (HUB75_PANEL_HEIGHT / 2u))
 #error "HUB75_SCAN_ROWS must not exceed HUB75_PANEL_HEIGHT / 2"
 #endif
-#if (HUB75_SCAN_ROWS > 32u)
+#if !HUB75_PANEL_IS_SM5368 && (HUB75_SCAN_ROWS > 32u)
 #error "HUB75_SCAN_ROWS must not exceed 32 with A/B/C/D/E address lines"
 #endif
 
@@ -27,7 +27,29 @@ uint8_t hub75_panel_buff[HUB75_PANEL_WIDTH * HUB75_PANEL_HEIGHT / 2 * 3];
 #define HUB75_ADDR_PORTB_MASK    (C_Pin)
 #define HUB75_ADDR_PORTC_MASK    (B_Pin)
 
-static inline void HUB75_SetScanLineFast(uint16_t line)
+#if HUB75_PANEL_IS_SM5368
+#define HUB75_PACK_TOP_R_BIT       (7u)
+#define HUB75_PACK_TOP_G_BIT       (6u)
+#define HUB75_PACK_TOP_B_BIT       (5u)
+#define HUB75_PACK_BOTTOM_R_BIT    (4u)
+#define HUB75_PACK_BOTTOM_G_BIT    (3u)
+#define HUB75_PACK_BOTTOM_B_BIT    (2u)
+#else
+#define HUB75_PACK_TOP_R_BIT       (5u)
+#define HUB75_PACK_TOP_G_BIT       (6u)
+#define HUB75_PACK_TOP_B_BIT       (7u)
+#define HUB75_PACK_BOTTOM_R_BIT    (2u)
+#define HUB75_PACK_BOTTOM_G_BIT    (3u)
+#define HUB75_PACK_BOTTOM_B_BIT    (4u)
+#endif
+
+static inline void HUB75_AssignPackedBit(uint8_t *plane, uint8_t bit, uint8_t enabled)
+{
+  uint8_t mask = (uint8_t)(1u << bit);
+  *plane = (enabled != 0u) ? (uint8_t)(*plane | mask) : (uint8_t)(*plane & (uint8_t)~mask);
+}
+
+static inline void HUB75_SetAddressBinaryFast(uint16_t line)
 {
   uint32_t bsrr_a = (uint32_t)HUB75_ADDR_PORTA_MASK << 16u;
   uint32_t bsrr_b = (uint32_t)HUB75_ADDR_PORTB_MASK << 16u;
@@ -47,6 +69,38 @@ static inline void HUB75_SetScanLineFast(uint16_t line)
   GPIOA->BSRR = bsrr_a;
   GPIOB->BSRR = bsrr_b;
   GPIOC->BSRR = bsrr_c;
+}
+
+static inline void HUB75_SetAddressSm5368Phase(uint8_t row_data, uint8_t row_clk)
+{
+  uint32_t bsrr_a = (uint32_t)HUB75_ADDR_PORTA_MASK << 16u;
+  uint32_t bsrr_b = (uint32_t)HUB75_ADDR_PORTB_MASK << 16u;
+  uint32_t bsrr_c = ((uint32_t)HUB75_ADDR_PORTC_MASK << 16u) | B_Pin;
+
+  if(row_clk != 0u)
+    bsrr_a |= A_Pin;
+  if(row_data != 0u)
+    bsrr_b |= C_Pin;
+
+  GPIOA->BSRR = bsrr_a;
+  GPIOB->BSRR = bsrr_b;
+  GPIOC->BSRR = bsrr_c;
+}
+
+static inline void HUB75_SetScanLineFast(uint16_t line)
+{
+#if HUB75_PANEL_IS_SM5368
+  uint8_t row_data = (line == 0u) ? 1u : 0u;
+
+  HUB75_SetAddressSm5368Phase(row_data, 0u);
+  Delay_us(HUB75_SM5368_PHASE_DELAY_US);
+  HUB75_SetAddressSm5368Phase(row_data, 1u);
+  Delay_us(HUB75_SM5368_PHASE_DELAY_US);
+  HUB75_SetAddressSm5368Phase(row_data, 0u);
+  Delay_us(HUB75_SM5368_PHASE_DELAY_US);
+#else
+  HUB75_SetAddressBinaryFast(line);
+#endif
 }
 
 static inline void HUB75_LatchRowFast(uint16_t scan_row)
@@ -217,16 +271,7 @@ void HUB75_WriteByte(uint8_t p_buff[], uint8_t color)
   }
 
   HUB75_OE_H();
-  HUB75_LAT_H();
-
-  /* write row addr */
-  (scan_row & 0x0001) ? HUB75_A_H() : HUB75_A_L();
-  (scan_row & 0x0002) ? HUB75_B_H() : HUB75_B_L();
-  (scan_row & 0x0004) ? HUB75_C_H() : HUB75_C_L();
-  (scan_row & 0x0008) ? HUB75_D_H() : HUB75_D_L();
-  (scan_row & 0x0010) ? HUB75_E_H() : HUB75_E_L();
-  HUB75_LAT_L();
-  HUB75_OE_L();
+  HUB75_LatchRowFast(scan_row);
   HUB75_OE_Window();
 
   if(++row >= HUB75_SCAN_ROWS){
@@ -310,63 +355,32 @@ void HUB75_WritePanel(uint8_t R, uint8_t G, uint8_t B, uint16_t row, uint16_t co
 
   if(row < (HUB75_PANEL_HEIGHT/2))      //Top
   {
-    if((R >> 6) & 0x01) *p_plane1 |= (1 << 5);
-    else                *p_plane1 &= ~(1 << 5);
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_TOP_R_BIT, (uint8_t)((R >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_TOP_R_BIT, (uint8_t)((R >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_TOP_R_BIT, (uint8_t)((R >> 4) & 0x01u));
 
-    if((R >> 5) & 0x01) *p_plane2 |= (1 << 5);
-    else                *p_plane2 &= ~(1 << 5);
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_TOP_G_BIT, (uint8_t)((G >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_TOP_G_BIT, (uint8_t)((G >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_TOP_G_BIT, (uint8_t)((G >> 4) & 0x01u));
 
-    if((R >> 4) & 0x01) *p_plane3 |= (1 << 5);
-    else                *p_plane3 &= ~(1 << 5);
-
-    if((G >> 6) & 0x01) *p_plane1 |= (1 << 6);
-    else                *p_plane1 &= ~(1 << 6);
-
-    if((G >> 5) & 0x01) *p_plane2 |= (1 << 6);
-    else                *p_plane2 &= ~(1 << 6);
-
-    if((G >> 4) & 0x01) *p_plane3 |= (1 << 6);
-    else                *p_plane3 &= ~(1 << 6);
-
-    if((B >> 6) & 0x01) *p_plane1 |= (1 << 7);
-    else                *p_plane1 &= ~(1 << 7);
-
-    if((B >> 5) & 0x01) *p_plane2 |= (1 << 7);
-    else                *p_plane2 &= ~(1 << 7);
-
-    if((B >> 4) & 0x01) *p_plane3 |= (1 << 7);
-    else                *p_plane3 &= ~(1 << 7);
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_TOP_B_BIT, (uint8_t)((B >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_TOP_B_BIT, (uint8_t)((B >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_TOP_B_BIT, (uint8_t)((B >> 4) & 0x01u));
   }
   else                                  //Bottom
   {
-    if((R >> 6) & 0x01) *p_plane1 |= (1 << 2);
-    else                *p_plane1 &= ~(1 << 2);
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_BOTTOM_R_BIT, (uint8_t)((R >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_BOTTOM_R_BIT, (uint8_t)((R >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_BOTTOM_R_BIT, (uint8_t)((R >> 4) & 0x01u));
 
-    if((R >> 5) & 0x01) *p_plane2 |= (1 << 2);
-    else                *p_plane2 &= ~(1 << 2);
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_BOTTOM_G_BIT, (uint8_t)((G >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_BOTTOM_G_BIT, (uint8_t)((G >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_BOTTOM_G_BIT, (uint8_t)((G >> 4) & 0x01u));
 
-    if((R >> 4) & 0x01) *p_plane3 |= (1 << 2);
-    else                *p_plane3 &= ~(1 << 2);
-
-    if((G >> 6) & 0x01) *p_plane1 |= (1 << 3);
-    else                *p_plane1 &= ~(1 << 3);
-
-    if((G >> 5) & 0x01) *p_plane2 |= (1 << 3);
-    else                *p_plane2 &= ~(1 << 3);
-
-    if((G >> 4) & 0x01) *p_plane3 |= (1 << 3);
-    else                *p_plane3 &= ~(1 << 3);
-
-    if((B >> 6) & 0x01) *p_plane1 |= (1 << 4);
-    else                *p_plane1 &= ~(1 << 4);
-
-    if((B >> 5) & 0x01) *p_plane2 |= (1 << 4);
-    else                *p_plane2 &= ~(1 << 4);
-
-    if((B >> 4) & 0x01) *p_plane3 |= (1 << 4);
-    else                *p_plane3 &= ~(1 << 4);
-
-	}
+    HUB75_AssignPackedBit(p_plane1, HUB75_PACK_BOTTOM_B_BIT, (uint8_t)((B >> 6) & 0x01u));
+    HUB75_AssignPackedBit(p_plane2, HUB75_PACK_BOTTOM_B_BIT, (uint8_t)((B >> 5) & 0x01u));
+    HUB75_AssignPackedBit(p_plane3, HUB75_PACK_BOTTOM_B_BIT, (uint8_t)((B >> 4) & 0x01u));
+  }
 }
 
 void HUB75_LoadRGB565Frame(const uint16_t *frame, uint16_t width, uint16_t height)

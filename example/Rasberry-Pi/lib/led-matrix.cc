@@ -58,6 +58,20 @@ extern "C" void ledmatrix_reset_global_gpio() { s_global_io.ResetState(); }
 #endif
 
 namespace rgb_matrix {
+namespace {
+static const char kPanelType96x48Sm5368[] = "96X48_1_24_SM5368";
+
+static void ApplySpecialPanelProfile(RGBMatrix::Options *options) {
+  if (options->panel_type == NULL) return;
+  if (strcmp(options->panel_type, kPanelType96x48Sm5368) != 0) return;
+
+  options->rows = 48;
+  options->cols = 96;
+  options->row_address_type = 5;
+  options->led_rgb_sequence = "BGR";
+}
+}  // namespace
+
 // Implementation details of RGBmatrix.
 class RGBMatrix::Impl {
   class UpdateThread;
@@ -703,8 +717,11 @@ static bool drop_privs(const char *priv_user, const char *priv_group) {
 
 RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
                                         const RuntimeOptions &runtime_options) {
+  RGBMatrix::Options resolved_options = options;
+  ApplySpecialPanelProfile(&resolved_options);
+
   std::string error;
-  if (!options.Validate(&error)) {
+  if (!resolved_options.Validate(&error)) {
     fprintf(stderr, "%s\n", error.c_str());
     return NULL;
   }
@@ -727,13 +744,13 @@ RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
   GPIO &io = s_global_io;
   Rp1RioSetEnabled(runtime_options.rp1_rio > 0);
   const bool use_rp1_rio = runtime_options.do_gpio_init
-      && Rp1RioShouldActivate(options.hardware_mapping,
-                              options.row_address_type,
-                              options.parallel);
+      && Rp1RioShouldActivate(resolved_options.hardware_mapping,
+                              resolved_options.row_address_type,
+                              resolved_options.parallel);
   const bool use_rp1_pio = !use_rp1_rio && runtime_options.do_gpio_init
-      && Rp1PioShouldActivate(options.hardware_mapping,
-                              options.row_address_type,
-                              options.parallel);
+      && Rp1PioShouldActivate(resolved_options.hardware_mapping,
+                              resolved_options.row_address_type,
+                              resolved_options.parallel);
   if (use_rp1_rio) {
     Rp1RioSetGpioSlowdown(runtime_options.gpio_slowdown);
   }
@@ -745,7 +762,11 @@ RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
       Rp1PioPlatformDetected() || Rp1RioPlatformDetected();
   if (runtime_options.do_gpio_init && pi5_backend_available
       && !use_rp1_pio && !use_rp1_rio) {
-    if (Rp1RioBackendRequested()) {
+    if (resolved_options.row_address_type == 5) {
+      fprintf(stderr,
+              "Pi 5-family RP1 backend does not support the SM5368/B707 row "
+              "selector yet; falling back to the generic GPIO path.\n");
+    } else if (Rp1RioBackendRequested()) {
       fprintf(stderr,
               "Pi 5-family RP1 RIO backend was requested via "
               "--led-rp1-rio=1, but this configuration is not "
@@ -753,6 +774,7 @@ RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
               "Supported for now: mappings "
               "regular/adafruit-hat/adafruit-hat-pwm/classic and "
               "--led-row-addr-type=0 or 2.\n");
+      return NULL;
     } else {
       fprintf(stderr,
               "Pi 5-family RP1 backend is available, but this configuration is not "
@@ -760,8 +782,8 @@ RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
               "Supported for now: mappings "
               "regular/adafruit-hat/adafruit-hat-pwm/classic and "
               "--led-row-addr-type=0 or 2.\n");
+      return NULL;
     }
-    return NULL;
   }
 
   // C wrapper implementation is at file scope; use local reference `io`.
@@ -776,7 +798,7 @@ RGBMatrix *RGBMatrix::CreateFromOptions(const RGBMatrix::Options &options,
     perror("Failed to become daemon");
   }
 
-  RGBMatrix::Impl *result = new RGBMatrix::Impl(NULL, options);
+  RGBMatrix::Impl *result = new RGBMatrix::Impl(NULL, resolved_options);
   // Allowing daemon also means we are allowed to start the thread now.
   const bool allow_daemon = !(runtime_options.daemon < 0);
   if (runtime_options.do_gpio_init)
@@ -807,6 +829,7 @@ RGBMatrix *RGBMatrix::CreateFromFlags(int *argc, char ***argv,
 
   if (!ParseOptionsFromFlags(argc, argv, mopt, ropt, remove_consumed_options))
     return NULL;
+  ApplySpecialPanelProfile(mopt);
   return CreateFromOptions(*mopt, *ropt);
 }
 
