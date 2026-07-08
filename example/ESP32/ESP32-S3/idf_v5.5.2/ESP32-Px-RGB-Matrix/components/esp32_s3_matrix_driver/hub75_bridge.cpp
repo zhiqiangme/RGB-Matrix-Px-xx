@@ -37,6 +37,14 @@ static Hub75Config make_config() {
 #endif
   );
 
+  cfg.line_decoder = (
+#if defined(CONFIG_ESP32_S3_MATRIX_LINE_DECODER_SM5368)
+      Hub75LineDecoder::SM5368
+#else
+      Hub75LineDecoder::BINARY
+#endif
+  );
+
   cfg.layout_rows = CONFIG_HUB75_LAYOUT_ROWS;
   cfg.layout_cols = CONFIG_HUB75_LAYOUT_COLS;
   cfg.layout = (
@@ -74,12 +82,21 @@ static Hub75Config make_config() {
   );
 
   Hub75Pins pins{};
+#if defined(CONFIG_ESP32_S3_MATRIX_SWAP_RB)
+  pins.r1 = (int8_t)CONFIG_HUB75_PIN_B1;
+  pins.g1 = (int8_t)CONFIG_HUB75_PIN_G1;
+  pins.b1 = (int8_t)CONFIG_HUB75_PIN_R1;
+  pins.r2 = (int8_t)CONFIG_HUB75_PIN_B2;
+  pins.g2 = (int8_t)CONFIG_HUB75_PIN_G2;
+  pins.b2 = (int8_t)CONFIG_HUB75_PIN_R2;
+#else
   pins.r1 = (int8_t)CONFIG_HUB75_PIN_R1;
   pins.g1 = (int8_t)CONFIG_HUB75_PIN_G1;
   pins.b1 = (int8_t)CONFIG_HUB75_PIN_B1;
   pins.r2 = (int8_t)CONFIG_HUB75_PIN_R2;
   pins.g2 = (int8_t)CONFIG_HUB75_PIN_G2;
   pins.b2 = (int8_t)CONFIG_HUB75_PIN_B2;
+#endif
   pins.a = (int8_t)CONFIG_HUB75_PIN_A;
   pins.b = (int8_t)CONFIG_HUB75_PIN_B;
   pins.c = (int8_t)CONFIG_HUB75_PIN_C;

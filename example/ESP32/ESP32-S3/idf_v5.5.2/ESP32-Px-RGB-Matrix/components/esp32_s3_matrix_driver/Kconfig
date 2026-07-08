@@ -1,0 +1,35 @@
+menu "ESP32-S3 Matrix Wrapper"
+
+    choice ESP32_S3_MATRIX_LINE_DECODER
+        prompt "Line Decoder Mode"
+        default ESP32_S3_MATRIX_LINE_DECODER_BINARY
+        help
+            Select how panel rows are addressed.
+
+            Use the standard binary mode for regular HUB75 panels with
+            ABCDE row address lines.
+
+            Use SM5368 mode for panels where A/B/C are repurposed as
+            row_clk/BK/row_data and rows are shifted in serially.
+
+        config ESP32_S3_MATRIX_LINE_DECODER_BINARY
+            bool "Binary ABCDE"
+
+        config ESP32_S3_MATRIX_LINE_DECODER_SM5368
+            bool "SM5368 Serial Row Decode"
+    endchoice
+
+    config ESP32_S3_MATRIX_SWAP_RB
+        bool "Swap R/B Data Pins"
+        default y if ESP32_S3_MATRIX_LINE_DECODER_SM5368
+        default n
+        help
+            Swaps the R and B data pin assignments:
+            R1 <-> B1 and R2 <-> B2.
+
+            Enable this when the panel wiring or board routing has
+            red/blue channels physically crossed. In the current
+            hardware setup this is typically needed together with
+            SM5368 row decoding.
+
+endmenu

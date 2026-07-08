@@ -6,5 +6,5 @@ idf_component_register(
         "."
     REQUIRES
         lvgl__lvgl
-        esphome__esp-hub75
+        esphome_esp_hub75
 )

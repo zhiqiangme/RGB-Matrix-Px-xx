@@ -9,5 +9,4 @@ dependencies:
   espressif/esp_lvgl_port:
     public: true
     version: "^2.0.0"
-  esphome/esp-hub75:
-    version: "^0.3.5"
+

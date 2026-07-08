@@ -5,8 +5,8 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 
 
-#define PANEL_RES_X 80      // Number of pixels wide of each INDIVIDUAL panel module. 
-#define PANEL_RES_Y 40     // Number of pixels tall of each INDIVIDUAL panel module.
+#define PANEL_RES_X 96      // Number of pixels wide of each INDIVIDUAL panel module. 
+#define PANEL_RES_Y 48     // Number of pixels tall of each INDIVIDUAL panel module.
 #define PANEL_CHAIN 1      // Total number of panels chained one to another
  
 //MatrixPanel_I2S_DMA dma_display;
@@ -147,7 +147,7 @@ void setup() {
   mxconfig.gpio.e = 9;
   mxconfig.clkphase = false;
   mxconfig.driver = HUB75_I2S_CFG::SHIFTREG;
-  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_20M;
+  mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_16M;
   mxconfig.line_decoder = HUB75_I2S_CFG::SM5368;
   mxconfig.min_refresh_rate = 240; 
   // Display Setup
