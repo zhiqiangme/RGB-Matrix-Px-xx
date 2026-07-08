@@ -1,0 +1,263 @@
+menu "HUB75 RGB LED Matrix Driver"
+
+    config HUB75_BOARD_CUSTOM
+        bool "Custom (Manual Pin Configuration)"
+        default y
+
+    menu "Panel Settings"
+
+        config HUB75_PANEL_WIDTH
+            int "Panel Width (pixels)"
+            default 64
+            range 16 128
+
+        config HUB75_PANEL_HEIGHT
+            int "Panel Height (pixels)"
+            default 32
+            range 16 64
+
+        choice HUB75_SCAN_WIRING
+            prompt "Scan Wiring Pattern"
+            default HUB75_WIRING_STANDARD
+
+            config HUB75_WIRING_STANDARD
+                bool "Standard (Most Panels)"
+
+            config HUB75_WIRING_SCAN_1_4_16PX
+                bool "1/4 Scan (16px high panels)"
+
+            config HUB75_WIRING_SCAN_1_8_32PX
+                bool "1/8 Scan (32px, 16-pixel interleaved)"
+
+            config HUB75_WIRING_SCAN_1_8_32PX_FULL
+                bool "1/8 Scan (32px, full-width segments)"
+
+            config HUB75_WIRING_SCAN_1_8_40PX
+                bool "1/8 Scan (40px high panels)"
+
+            config HUB75_WIRING_SCAN_1_8_64PX
+                bool "1/8 Scan (64px high panels)"
+        endchoice
+
+        choice HUB75_SHIFT_DRIVER
+            prompt "Shift Driver IC"
+            default HUB75_DRIVER_GENERIC
+
+            config HUB75_DRIVER_GENERIC
+                bool "Generic"
+
+            config HUB75_DRIVER_FM6126A
+                bool "FM6126A / ICN2038S"
+
+            config HUB75_DRIVER_FM6124
+                bool "FM6124"
+
+            config HUB75_DRIVER_MBI5124
+                bool "MBI5124"
+
+            config HUB75_DRIVER_DP3246
+                bool "DP3246"
+        endchoice
+
+        config HUB75_BIT_DEPTH
+            int "Bit Depth"
+            default 8
+            range 4 12
+
+        choice HUB75_CLOCK_SPEED
+            prompt "Output Clock Speed"
+            default HUB75_CLK_20MHZ
+
+            config HUB75_CLK_8MHZ
+                bool "8 MHz"
+
+            config HUB75_CLK_10MHZ
+                bool "10 MHz"
+
+            config HUB75_CLK_16MHZ
+                bool "16 MHz"
+
+            config HUB75_CLK_18MHZ
+                bool "18 MHz"
+
+            config HUB75_CLK_20MHZ
+                bool "20 MHz"
+
+            config HUB75_CLK_23MHZ
+                bool "23 MHz"
+
+            config HUB75_CLK_27MHZ
+                bool "27 MHz"
+
+            config HUB75_CLK_32MHZ
+                bool "32 MHz"
+        endchoice
+
+        config HUB75_MIN_REFRESH_RATE
+            int "Minimum Refresh Rate (Hz)"
+            default 60
+            range 30 240
+
+        config HUB75_BRIGHTNESS
+            int "Default Brightness (0-255)"
+            default 128
+            range 0 255
+
+        choice HUB75_ROTATION
+            prompt "Display Rotation"
+            default HUB75_ROTATE_0
+
+            config HUB75_ROTATE_0
+                bool "0 degrees"
+
+            config HUB75_ROTATE_90
+                bool "90 degrees"
+
+            config HUB75_ROTATE_180
+                bool "180 degrees"
+
+            config HUB75_ROTATE_270
+                bool "270 degrees"
+        endchoice
+
+        config HUB75_DOUBLE_BUFFER
+            bool "Enable Double Buffer"
+            default n
+
+        config HUB75_CLK_PHASE_INVERTED
+            bool "Invert Clock Phase"
+            default n
+
+    endmenu
+
+    menu "Multi-Panel Layout"
+
+        config HUB75_LAYOUT_ROWS
+            int "Layout Rows"
+            default 1
+            range 1 8
+
+        config HUB75_LAYOUT_COLS
+            int "Layout Columns"
+            default 1
+            range 1 8
+
+        choice HUB75_PANEL_LAYOUT
+            prompt "Panel Layout"
+            default HUB75_LAYOUT_HORIZONTAL
+
+            config HUB75_LAYOUT_HORIZONTAL
+                bool "Horizontal"
+
+            config HUB75_LAYOUT_TOP_LEFT_DOWN
+                bool "Top-Left-Down"
+
+            config HUB75_LAYOUT_TOP_RIGHT_DOWN
+                bool "Top-Right-Down"
+
+            config HUB75_LAYOUT_BOTTOM_LEFT_UP
+                bool "Bottom-Left-Up"
+
+            config HUB75_LAYOUT_BOTTOM_RIGHT_UP
+                bool "Bottom-Right-Up"
+
+            config HUB75_LAYOUT_TOP_LEFT_DOWN_ZIGZAG
+                bool "Top-Left-Down (Zigzag)"
+
+            config HUB75_LAYOUT_TOP_RIGHT_DOWN_ZIGZAG
+                bool "Top-Right-Down (Zigzag)"
+
+            config HUB75_LAYOUT_BOTTOM_LEFT_UP_ZIGZAG
+                bool "Bottom-Left-Up (Zigzag)"
+
+            config HUB75_LAYOUT_BOTTOM_RIGHT_UP_ZIGZAG
+                bool "Bottom-Right-Up (Zigzag)"
+        endchoice
+
+    endmenu
+
+    menu "Pin Configuration"
+        visible if HUB75_BOARD_CUSTOM
+
+        config HUB75_PIN_R1
+            int "R1 Pin"
+            default 4
+            range -1 54
+
+        config HUB75_PIN_G1
+            int "G1 Pin"
+            default 5
+            range -1 54
+
+        config HUB75_PIN_B1
+            int "B1 Pin"
+            default 6
+            range -1 54
+
+        config HUB75_PIN_R2
+            int "R2 Pin"
+            default 7
+            range -1 54
+
+        config HUB75_PIN_G2
+            int "G2 Pin"
+            default 15
+            range -1 54
+
+        config HUB75_PIN_B2
+            int "B2 Pin"
+            default 16
+            range -1 54
+
+        config HUB75_PIN_A
+            int "A Pin"
+            default 18
+            range -1 54
+
+        config HUB75_PIN_B
+            int "B Pin"
+            default 8
+            range -1 54
+
+        config HUB75_PIN_C
+            int "C Pin"
+            default 3
+            range -1 54
+
+        config HUB75_PIN_D
+            int "D Pin"
+            default 42
+            range -1 54
+
+        config HUB75_PIN_E
+            int "E Pin"
+            default 9
+            range -1 54
+
+        config HUB75_PIN_LAT
+            int "LAT Pin"
+            default 40
+            range -1 54
+
+        config HUB75_PIN_OE
+            int "OE Pin"
+            default 2
+            range -1 54
+
+        config HUB75_PIN_CLK
+            int "CLK Pin"
+            default 41
+            range -1 54
+
+    endmenu
+
+    menu "Timing"
+
+        config HUB75_LATCH_BLANKING
+            int "Latch Blanking Cycles"
+            default 1
+            range 0 10
+
+    endmenu
+
+endmenu
