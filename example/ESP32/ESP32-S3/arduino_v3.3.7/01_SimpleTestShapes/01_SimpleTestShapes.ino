@@ -148,7 +148,7 @@ void setup() {
   mxconfig.clkphase = false;
   mxconfig.driver = HUB75_I2S_CFG::SHIFTREG;
   mxconfig.i2sspeed = HUB75_I2S_CFG::HZ_16M;
-  mxconfig.line_decoder = HUB75_I2S_CFG::SM5368;
+  // mxconfig.line_decoder = HUB75_I2S_CFG::SM5368;
   mxconfig.min_refresh_rate = 240; 
   // Display Setup
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
