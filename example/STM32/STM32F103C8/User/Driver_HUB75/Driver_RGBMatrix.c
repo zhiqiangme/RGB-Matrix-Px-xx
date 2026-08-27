@@ -24,8 +24,7 @@ uint8_t hub75_panel_buff[HUB75_PANEL_WIDTH * HUB75_PANEL_HEIGHT / 2 * 3];
 #define HUB75_DATA_PORTA_MASK    (R1_Pin | B2_Pin)
 #define HUB75_DATA_PORTB_MASK    (G2_Pin | G1_Pin | R2_Pin | B1_Pin)
 #define HUB75_ADDR_PORTA_MASK    (A_Pin | D_Pin | E_Pin)
-#define HUB75_ADDR_PORTB_MASK    (C_Pin)
-#define HUB75_ADDR_PORTC_MASK    (B_Pin)
+#define HUB75_ADDR_PORTB_MASK    (C_Pin | B_Pin)
 
 #if HUB75_PANEL_IS_SM5368
 #define HUB75_PACK_TOP_R_BIT       (7u)
@@ -53,12 +52,11 @@ static inline void HUB75_SetAddressBinaryFast(uint16_t line)
 {
   uint32_t bsrr_a = (uint32_t)HUB75_ADDR_PORTA_MASK << 16u;
   uint32_t bsrr_b = (uint32_t)HUB75_ADDR_PORTB_MASK << 16u;
-  uint32_t bsrr_c = (uint32_t)HUB75_ADDR_PORTC_MASK << 16u;
 
   if((line & 0x0001u) != 0u)
     bsrr_a |= A_Pin;
   if((line & 0x0002u) != 0u)
-    bsrr_c |= B_Pin;
+    bsrr_b |= B_Pin;
   if((line & 0x0004u) != 0u)
     bsrr_b |= C_Pin;
   if((line & 0x0008u) != 0u)
@@ -68,14 +66,13 @@ static inline void HUB75_SetAddressBinaryFast(uint16_t line)
 
   GPIOA->BSRR = bsrr_a;
   GPIOB->BSRR = bsrr_b;
-  GPIOC->BSRR = bsrr_c;
 }
 
 static inline void HUB75_SetAddressSm5368Phase(uint8_t row_data, uint8_t row_clk)
 {
   uint32_t bsrr_a = (uint32_t)HUB75_ADDR_PORTA_MASK << 16u;
-  uint32_t bsrr_b = (uint32_t)HUB75_ADDR_PORTB_MASK << 16u;
-  uint32_t bsrr_c = ((uint32_t)HUB75_ADDR_PORTC_MASK << 16u) | B_Pin;
+  /* SM5368 面板 B 地址线保持高电平，与 C 线一同由 GPIOB 输出 */
+  uint32_t bsrr_b = ((uint32_t)HUB75_ADDR_PORTB_MASK << 16u) | B_Pin;
 
   if(row_clk != 0u)
     bsrr_a |= A_Pin;
@@ -84,7 +81,6 @@ static inline void HUB75_SetAddressSm5368Phase(uint8_t row_data, uint8_t row_clk
 
   GPIOA->BSRR = bsrr_a;
   GPIOB->BSRR = bsrr_b;
-  GPIOC->BSRR = bsrr_c;
 }
 
 static inline void HUB75_SetScanLineFast(uint16_t line)

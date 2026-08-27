@@ -1,3 +1,26 @@
+STM32F103C8T6（Blue Pill，LQFP48）移植说明，基于 STM32F103RB 例程修改。
+
+引脚重映射（RB 板上的 PB10、PC7 在 LQFP48 封装上不存在）：
+
+| 信号 | RB 原引脚 | C8 新引脚 |
+| --- | --- | --- |
+| G2 | PB10 | PB7 |
+| B | PC7 | PB12 |
+
+其余引脚与 RB 例程一致（PA2/PA3 为 USART2，PA13/PA14 为 SWD）。
+
+HUB75 信号与 Blue Pill 引脚对照：
+
+| HUB75 信号 | 引脚 | HUB75 信号 | 引脚 |
+| --- | --- | --- | --- |
+| R1 | PA10 | R2 | PB4 |
+| G1 | PB3 | G2 | PB7 |
+| B1 | PB5 | B2 | PA8 |
+| A | PA9 | D | PA7 |
+| B | PB12 | E | PA6 |
+| C | PB6 | CLK | PA5 |
+| LAT | PB9 | OE | PB8 |
+
 如果有移植驱动的需求,可以在\User\Driver_HUB75下找到对应驱动。
 
 并且需要打开MCU定时器并且在定时中断中添加如下内容:

@@ -63,10 +63,10 @@ void Error_Handler(void);
 #define E_GPIO_Port GPIOA
 #define D_Pin GPIO_PIN_7
 #define D_GPIO_Port GPIOA
-#define G2_Pin GPIO_PIN_10
+#define G2_Pin GPIO_PIN_7
 #define G2_GPIO_Port GPIOB
-#define B_Pin GPIO_PIN_7
-#define B_GPIO_Port GPIOC
+#define B_Pin GPIO_PIN_12
+#define B_GPIO_Port GPIOB
 #define B2_Pin GPIO_PIN_8
 #define B2_GPIO_Port GPIOA
 #define A_Pin GPIO_PIN_9
