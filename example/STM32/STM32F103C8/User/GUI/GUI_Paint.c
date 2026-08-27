@@ -7,12 +7,12 @@
 PAINT Paint;
 
 /******************************************************************************
-function: Create Image
-parameter:
-    image   :   Pointer to the image cache
-    width   :   The width of the picture
-    Height  :   The height of the picture
-    Color   :   Whether the picture is inverted
+功能：创建图像
+参数：
+    image   :   指向图像缓存的指针
+    width   :   图像的宽度
+    Height  :   图像的高度
+    Color   :   图像是否反色
 ******************************************************************************/
 void Paint_NewImage(UWORD *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color)
 {
@@ -42,9 +42,9 @@ void Paint_NewImage(UWORD *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD
 }
 
 /******************************************************************************
-function: Select Image
-parameter:
-    image : Pointer to the image cache
+功能：选择图像
+参数：
+    image : 指向图像缓存的指针
 ******************************************************************************/
 void Paint_SelectImage(UWORD *image)
 {
@@ -52,9 +52,9 @@ void Paint_SelectImage(UWORD *image)
 }
 
 /******************************************************************************
-function: Select Image Rotate
-parameter:
-    Rotate : 0,90,180,270
+功能：选择图像的旋转角度
+参数：
+    Rotate : 0、90、180、270
 ******************************************************************************/
 void Paint_SetRotate(UWORD Rotate)
 {
@@ -75,9 +75,9 @@ void Paint_SetRotate(UWORD Rotate)
 }
 
 /******************************************************************************
-function:	Select Image mirror
-parameter:
-    mirror   :Not mirror,Horizontal mirror,Vertical mirror,Origin mirror
+功能：选择图像的镜像方式
+参数：
+    mirror   :不镜像、水平镜像、垂直镜像、原点镜像
 ******************************************************************************/
 void Paint_SetMirroring(UBYTE mirror)
 {
@@ -92,11 +92,11 @@ void Paint_SetMirroring(UBYTE mirror)
 }
 
 /******************************************************************************
-function: Draw Pixels
-parameter:
-    Xpoint : At point X
-    Ypoint : At point Y
-    Color  : Painted colors
+功能：绘制像素点
+参数：
+    Xpoint : X 方向坐标
+    Ypoint : Y 方向坐标
+    Color  : 绘制的颜色
 ******************************************************************************/
 void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color)
 {
@@ -156,15 +156,15 @@ void Paint_SetPixel(UWORD Xpoint, UWORD Ypoint, UWORD Color)
 }
 
 /******************************************************************************
-function: Clear the color of the picture
-parameter:
-    Color : Painted colors
+功能：清除整幅图像的颜色
+参数：
+    Color : 填充的颜色
 ******************************************************************************/
 void Paint_Clear(UWORD Color)
 {
 
 		for (UWORD Y = 0; Y < Paint.HeightByte; Y++) {
-				for (UWORD X = 0; X < Paint.WidthByte; X++ ) {//8 pixel =  1 byte
+				for (UWORD X = 0; X < Paint.WidthByte; X++ ) {//8 像素 = 1 字节
 						UDOUBLE Addr = X + Y * Paint.WidthByte;
 					 // printf("%d ",Addr);
 						Paint.Image[Addr] = Color;
@@ -176,32 +176,32 @@ void Paint_Clear(UWORD Color)
 }
 
 /******************************************************************************
-function: Clear the color of a window
-parameter:
-    Xstart : x starting point
-    Ystart : Y starting point
-    Xend   : x end point
-    Yend   : y end point
-    Color  : Painted colors
+功能：清除某个窗口区域的颜色
+参数：
+    Xstart : x 起点
+    Ystart : y 起点
+    Xend   : x 终点
+    Yend   : y 终点
+    Color  : 填充的颜色
 ******************************************************************************/
 void Paint_ClearWindows(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color)
 {
     UWORD X, Y;
     for (Y = Ystart; Y < Yend; Y++) {
-        for (X = Xstart; X < Xend; X++) {//8 pixel =  1 byte
+        for (X = Xstart; X < Xend; X++) {//8 像素 = 1 字节
             Paint_SetPixel(X, Y, Color);
         }
     }
 }
 
 /******************************************************************************
-function: Draw Point(Xpoint, Ypoint) Fill the color
-parameter:
-    Xpoint		: The Xpoint coordinate of the point
-    Ypoint		: The Ypoint coordinate of the point
-    Color		: Painted color
-    Dot_Pixel	: point size
-    Dot_Style	: point Style
+功能：绘制并填充点 (Xpoint, Ypoint)
+参数：
+    Xpoint		: 点的 X 坐标
+    Ypoint		: 点的 Y 坐标
+    Color		: 填充颜色
+    Dot_Pixel	: 点的大小
+    Dot_Style	: 点的样式
 ******************************************************************************/
 void Paint_DrawPoint(UWORD Xpoint, UWORD Ypoint, UWORD Color,
                      DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_Style)
@@ -233,15 +233,15 @@ void Paint_DrawPoint(UWORD Xpoint, UWORD Ypoint, UWORD Color,
 }
 
 /******************************************************************************
-function: Draw a line of arbitrary slope
-parameter:
-    Xstart ：Starting Xpoint point coordinates
-    Ystart ：Starting Xpoint point coordinates
-    Xend   ：End point Xpoint coordinate
-    Yend   ：End point Ypoint coordinate
-    Color  ：The color of the line segment
-    Line_width : Line width
-    Line_Style: Solid and dotted lines
+功能：绘制任意斜率的直线
+参数：
+    Xstart ：起点的 X 坐标
+    Ystart ：起点的 Y 坐标
+    Xend   ：终点的 X 坐标
+    Yend   ：终点的 Y 坐标
+    Color  ：线段的颜色
+    Line_width : 线宽
+    Line_Style: 实线与虚线
 ******************************************************************************/
 void Paint_DrawLine(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
                     UWORD Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style)
@@ -257,17 +257,17 @@ void Paint_DrawLine(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
     int dx = (int)Xend - (int)Xstart >= 0 ? Xend - Xstart : Xstart - Xend;
     int dy = (int)Yend - (int)Ystart <= 0 ? Yend - Ystart : Ystart - Yend;
 
-    // Increment direction, 1 is positive, -1 is counter;
+    // 递增方向，1 为正向，-1 为反向
     int XAddway = Xstart < Xend ? 1 : -1;
     int YAddway = Ystart < Yend ? 1 : -1;
 
-    //Cumulative error
+    //累计误差
     int Esp = dx + dy;
     char Dotted_Len = 0;
 
     for (;;) {
         Dotted_Len++;
-        //Painted dotted line, 2 point is really virtual
+        //绘制虚线，第 2 个点为虚拟点
         if (Line_Style == LINE_STYLE_DOTTED && Dotted_Len % 3 == 0) {
             //printf("LINE_DOTTED\r\n");
 						if(Color)
@@ -294,15 +294,15 @@ void Paint_DrawLine(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
 }
 
 /******************************************************************************
-function: Draw a rectangle
-parameter:
-    Xstart ：Rectangular  Starting Xpoint point coordinates
-    Ystart ：Rectangular  Starting Xpoint point coordinates
-    Xend   ：Rectangular  End point Xpoint coordinate
-    Yend   ：Rectangular  End point Ypoint coordinate
-    Color  ：The color of the Rectangular segment
-    Line_width: Line width
-    Draw_Fill : Whether to fill the inside of the rectangle
+功能：绘制矩形
+参数：
+    Xstart ：矩形的起点 X 坐标
+    Ystart ：矩形的起点 Y 坐标
+    Xend   ：矩形的终点 X 坐标
+    Yend   ：矩形的终点 Y 坐标
+    Color  ：矩形的颜色
+    Line_width: 线宽
+    Draw_Fill : 是否填充矩形内部
 ******************************************************************************/
 void Paint_DrawRectangle(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
                          UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill)
@@ -327,15 +327,14 @@ void Paint_DrawRectangle(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend,
 }
 
 /******************************************************************************
-function: Use the 8-point method to draw a circle of the
-            specified size at the specified position->
-parameter:
-    X_Center  ：Center X coordinate
-    Y_Center  ：Center Y coordinate
-    Radius    ：circle Radius
-    Color     ：The color of the ：circle segment
-    Line_width: Line width
-    Draw_Fill : Whether to fill the inside of the Circle
+功能：使用八点法在指定位置绘制指定大小的圆
+参数：
+    X_Center  ：圆心 X 坐标
+    Y_Center  ：圆心 Y 坐标
+    Radius    ：圆的半径
+    Color     ：圆弧的颜色
+    Line_width: 线宽
+    Draw_Fill : 是否填充圆内部
 ******************************************************************************/
 void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius,
                       UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill)
@@ -345,17 +344,17 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius,
         return;
     }
 
-    //Draw a circle from(0, R) as a starting point
+    //从 (0, R) 作为起点开始画圆
     int16_t XCurrent, YCurrent;
     XCurrent = 0;
     YCurrent = Radius;
 
-    //Cumulative error,judge the next point of the logo
+    //累计误差，用于判断标志的下一个点
     int16_t Esp = 3 - (Radius << 1 );
 
     int16_t sCountY;
     if (Draw_Fill == DRAW_FILL_FULL) {
-        while (XCurrent <= YCurrent ) { //Realistic circles
+        while (XCurrent <= YCurrent ) { //实心圆
             for (sCountY = XCurrent; sCountY <= YCurrent; sCountY ++ ) {
                 Paint_DrawPoint(X_Center + XCurrent, Y_Center + sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//1
                 Paint_DrawPoint(X_Center - XCurrent, Y_Center + sCountY, Color, DOT_PIXEL_DFT, DOT_STYLE_DFT);//2
@@ -374,7 +373,7 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius,
             }
             XCurrent ++;
         }
-    } else { //Draw a hollow circle
+    } else { //绘制空心圆
         while (XCurrent <= YCurrent ) {
             Paint_DrawPoint(X_Center + XCurrent, Y_Center + YCurrent, Color, Line_width, DOT_STYLE_DFT);//1
             Paint_DrawPoint(X_Center - XCurrent, Y_Center + YCurrent, Color, Line_width, DOT_STYLE_DFT);//2
@@ -397,14 +396,14 @@ void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius,
 }
 
 /******************************************************************************
-function: Show English characters
-parameter:
-    Xpoint           ：X coordinate
-    Ypoint           ：Y coordinate
-    Acsii_Char       ：To display the English characters
-    Font             ：A structure pointer that displays a character size
-    Color_Foreground : Select the foreground color
-    Color_Background : Select the background color
+功能：显示英文字符
+参数：
+    Xpoint           ：X 坐标
+    Ypoint           ：Y 坐标
+    Acsii_Char       ：要显示的英文字符
+    Font             ：指向描述字符尺寸的字体结构体的指针
+    Color_Foreground : 选择前景色
+    Color_Background : 选择背景色
 ******************************************************************************/
 void Paint_DrawChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
                     sFONT* Font, UWORD Color_Foreground, UWORD Color_Background)
@@ -422,8 +421,8 @@ void Paint_DrawChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
     for (Page = 0; Page < Font->Height; Page ++ ) {
         for (Column = 0; Column < Font->Width; Column ++ ) {
 
-            //To determine whether the font background color and screen background color is consistent
-            if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
+            //判断字体背景色与屏幕背景色是否一致
+            if (FONT_BACKGROUND == Color_Background) { //此流程用于加快扫描速度
                 if (*ptr & (0x80 >> (Column % 8)))
                     Paint_SetPixel(Xpoint + Column, Ypoint + Page, Color_Foreground);
                     // Paint_DrawPoint(Xpoint + Column, Ypoint + Page, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
@@ -436,24 +435,24 @@ void Paint_DrawChar(UWORD Xpoint, UWORD Ypoint, const char Acsii_Char,
                     // Paint_DrawPoint(Xpoint + Column, Ypoint + Page, Color_Background, DOT_PIXEL_DFT, DOT_STYLE_DFT);
                 }
             }
-            //One pixel is 8 bits
+            //一个像素占 8 位
             if (Column % 8 == 7)
                 ptr++;
-        }// Write a line
+        }//写入一行
         if (Font->Width % 8 != 0)
             ptr++;
-    }// Write all
+    }//写入全部
 }
 
 /******************************************************************************
-function:	Display the string
-parameter:
-    Xstart           ：X coordinate
-    Ystart           ：Y coordinate
-    pString          ：The first address of the English string to be displayed
-    Font             ：A structure pointer that displays a character size
-    Color_Foreground : Select the foreground color
-    Color_Background : Select the background color
+功能：显示字符串
+参数：
+    Xstart           ：X 坐标
+    Ystart           ：Y 坐标
+    pString          ：要显示的英文字符串的首地址
+    Font             ：指向描述字符尺寸的字体结构体的指针
+    Color_Foreground : 选择前景色
+    Color_Background : 选择背景色
 ******************************************************************************/
 void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString,
                          sFONT* Font, UWORD Color_Foreground, UWORD Color_Background)
@@ -467,38 +466,37 @@ void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString,
     }
 
     while (* pString != '\0') {
-        //if X direction filled , reposition to(Xstart,Ypoint),Ypoint is Y direction plus the Height of the character
+        //若 X 方向写满，则换行到 (Xstart, Ypoint)，Ypoint 为 Y 方向加上一个字符高度
         if ((Xpoint + Font->Width ) > Paint.Width ) {
             Xpoint = Xstart;
             Ypoint += Font->Height;
         }
 
-        // If the Y direction is full, reposition to(Xstart, Ystart)
+        // 若 Y 方向也写满，则回到起点 (Xstart, Ystart)
         if ((Ypoint  + Font->Height ) > Paint.Height ) {
             Xpoint = Xstart;
             Ypoint = Ystart;
         }
         Paint_DrawChar(Xpoint, Ypoint, * pString, Font, Color_Background, Color_Foreground);
 
-        //The next character of the address
+        //下一个字符的地址
         pString ++;
 
-        //The next word of the abscissa increases the font of the broadband
+        //横坐标方向前进一个字体宽度
         Xpoint += Font->Width;
     }
 }
 
 
 /******************************************************************************
-function: Display the string
-parameter:
-    Xstart  ：X coordinate
-    Ystart  ：Y coordinate
-    pString ：The first address of the Chinese string and English
-              string to be displayed
-    Font    ：A structure pointer that displays a character size
-    Color_Foreground : Select the foreground color
-    Color_Background : Select the background color
+功能：显示字符串
+参数：
+    Xstart  ：X 坐标
+    Ystart  ：Y 坐标
+    pString ：要显示的中文字符串与英文字符串的首地址
+    Font    ：指向描述字符尺寸的字体结构体的指针
+    Color_Foreground : 选择前景色
+    Color_Background : 选择背景色
 ******************************************************************************/
 void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT* font,
                         UWORD Color_Foreground, UWORD Color_Background)
@@ -507,16 +505,16 @@ void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT
     int x = Xstart, y = Ystart;
     int i, j,Num;
 
-    /* Send the string character by character on LCD */
+    /* 在屏幕上逐字符显示字符串 */
     while (*p_text != 0) {
-        if(*p_text <= 0x7F) {  //ASCII < 126
+        if(*p_text <= 0x7F) {  //ASCII 码 < 126
             for(Num = 0; Num < font->size; Num++) {
                 if(*p_text== font->table[Num].index[0]) {
                     const char* ptr = &font->table[Num].matrix[0];
 
                     for (j = 0; j < font->Height; j++) {
                         for (i = 0; i < font->Width; i++) {
-                            if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
+                            if (FONT_BACKGROUND == Color_Background) { //此流程用于加快扫描速度
                                 if (*ptr & (0x80 >> (i % 8))) {
                                     Paint_SetPixel(x + i, y + j, Color_Foreground);
                                     // Paint_DrawPoint(x + i, y + j, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
@@ -541,18 +539,18 @@ void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT
                     break;
                 }
             }
-            /* Point on the next character */
+            /* 指向下一个字符 */
             p_text += 1;
-            /* Decrement the column position by 16 */
+            /* 将列位置移动 16 */
             x += font->ASCII_Width;
-        } else {        //Chinese
+        } else {        //中文
             for(Num = 0; Num < font->size; Num++) {
                 if((*p_text== font->table[Num].index[0]) && (*(p_text+1) == font->table[Num].index[1])) {
                     const char* ptr = &font->table[Num].matrix[0];
 
                     for (j = 0; j < font->Height; j++) {
                         for (i = 0; i < font->Width; i++) {
-                            if (FONT_BACKGROUND == Color_Background) { //this process is to speed up the scan
+                            if (FONT_BACKGROUND == Color_Background) { //此流程用于加快扫描速度
                                 if (*ptr & (0x80 >> (i % 8))) {
                                     Paint_SetPixel(x + i, y + j, Color_Foreground);
                                     // Paint_DrawPoint(x + i, y + j, Color_Foreground, DOT_PIXEL_DFT, DOT_STYLE_DFT);
@@ -577,24 +575,24 @@ void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT
                     break;
                 }
             }
-            /* Point on the next character */
+            /* 指向下一个字符 */
             p_text += 2;
-            /* Decrement the column position by 16 */
+            /* 将列位置移动 16 */
             x += font->Width;
         }
     }
 }
 
 /******************************************************************************
-function:	Display nummber
-parameter:
-    Xstart           ：X coordinate
-    Ystart           : Y coordinate
-    Nummber          : The number displayed
-    Font             ：A structure pointer that displays a character size
-	Digit						 : Fractional width
-    Color_Foreground : Select the foreground color
-    Color_Background : Select the background color
+功能：显示数字
+参数：
+    Xstart           ：X 坐标
+    Ystart           : Y 坐标
+    Nummber          : 要显示的数字
+    Font             ：指向描述字符尺寸的字体结构体的指针
+	Digit						 : 小数位宽
+    Color_Foreground : 选择前景色
+    Color_Background : 选择背景色
 ******************************************************************************/
 #define  ARRAY_LEN 255
 void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, double Nummber,
@@ -617,7 +615,7 @@ void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, double Nummber,
 			decimals*=10;
 		}
 		temp = decimals;
-		//Converts a number to a string
+		//将数字转换为字符串
 		for(i=Digit; i>0; i--) {
 			Num_Array[Num_Bit] = temp % 10 + '0';
 			Num_Bit++;
@@ -628,33 +626,33 @@ void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, double Nummber,
 	}
 
 	temp = Nummber;
-    //Converts a number to a string
+    //将数字转换为字符串
     while (temp) {
         Num_Array[Num_Bit] = temp % 10 + '0';
         Num_Bit++;
         temp /= 10;
     }
 		
-    //The string is inverted
+    //将字符串反转
     while (Num_Bit > 0) {
         Str_Array[Str_Bit] = Num_Array[Num_Bit - 1];
         Str_Bit ++;
         Num_Bit --;
     }
 
-    //show
+    //显示
     Paint_DrawString_EN(Xpoint, Ypoint, (const char*)pStr, Font, Color_Background, Color_Foreground);
 }
 
 /******************************************************************************
-function:	Display time
-parameter:
-    Xstart           ：X coordinate
-    Ystart           : Y coordinate
-    pTime            : Time-related structures
-    Font             ：A structure pointer that displays a character size
-    Color_Foreground : Select the foreground color
-    Color_Background : Select the background color
+功能：显示时间
+参数：
+    Xstart           ：X 坐标
+    Ystart           : Y 坐标
+    pTime            : 与时间相关的结构体
+    Font             ：指向描述字符尺寸的字体结构体的指针
+    Color_Foreground : 选择前景色
+    Color_Background : 选择背景色
 ******************************************************************************/
 void Paint_DrawTime(UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT* Font,
                     UWORD Color_Foreground, UWORD Color_Background)
@@ -663,7 +661,7 @@ void Paint_DrawTime(UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT* Font,
 
     UWORD Dx = Font->Width;
 
-    //Write data into the cache
+    //将数据写入缓存
     Paint_DrawChar(Xstart                           , Ystart, value[pTime->Hour / 10], Font, Color_Background, Color_Foreground);
     Paint_DrawChar(Xstart + Dx                      , Ystart, value[pTime->Hour % 10], Font, Color_Background, Color_Foreground);
     Paint_DrawChar(Xstart + Dx  + Dx / 4 + Dx / 2   , Ystart, ':'                    , Font, Color_Background, Color_Foreground);
@@ -681,11 +679,11 @@ void Paint_DrawImage(const unsigned char *image, UWORD xStart, UWORD yStart, UWO
     int i,j; 
 		for(j = 0; j < H_Image; j++){
 			for(i = 0; i < W_Image; i++){
-				if(xStart+i < Paint.WidthMemory  &&  yStart+j < Paint.HeightMemory)//Exceeded part does not display
+				if(xStart+i < Paint.WidthMemory  &&  yStart+j < Paint.HeightMemory)//超出部分不显示
 					Paint_SetPixel(xStart + i, yStart + j, (*(image + j*W_Image*2 + i*2+1))<<8 | (*(image + j*W_Image*2 + i*2)));
-				//Using arrays is a property of sequential storage, accessing the original array by algorithm
-				//j*W_Image*2 			   Y offset
-				//i*2              	   X offset
+				//利用数组顺序存储的特性，通过算法访问原数组
+				//j*W_Image*2 			   Y 偏移
+				//i*2              	   X 偏移
 			}
 		} 
 }
@@ -695,11 +693,11 @@ void Paint_DrawImage1(const unsigned char *image, UWORD xStart, UWORD yStart, UW
     int i,j; 
 		for(j = 0; j < H_Image; j++){
 			for(i = 0; i < W_Image; i++){
-				if(xStart+i < Paint.HeightMemory  &&  yStart+j < Paint.WidthMemory)//Exceeded part does not display
+				if(xStart+i < Paint.HeightMemory  &&  yStart+j < Paint.WidthMemory)//超出部分不显示
 					Paint_SetPixel(xStart + i, yStart + j, (*(image + j*W_Image*2 + i*2+1))<<8 | (*(image + j*W_Image*2 + i*2)));
-				//Using arrays is a property of sequential storage, accessing the original array by algorithm
-				//j*W_Image*2 			   Y offset
-				//i*2              	   X offset
+				//利用数组顺序存储的特性，通过算法访问原数组
+				//j*W_Image*2 			   Y 偏移
+				//i*2              	   X 偏移
 			}
 		} 
 }
@@ -728,12 +726,12 @@ void Paint_DrawGradientImage(UWORD xStart, UWORD yStart, UWORD width, UWORD heig
 
 
 /******************************************************************************
-function:	Display monochrome bitmap
-parameter:
-    image_buffer ：A picture data converted to a bitmap
-info:
-    Use a computer to convert the image into a corresponding array,
-    and then embed the array directly into Imagedata.cpp as a .c file.
+功能：显示单色位图
+参数：
+    image_buffer ：转换到位图格式的图像数据
+说明：
+    先在电脑上把图像转换成对应的数组，
+    再把该数组直接以内嵌 .c 文件的形式写入 Imagedata.cpp。
 ******************************************************************************/
 void Paint_DrawBitMap(const unsigned char* image_buffer)
 {
@@ -741,7 +739,7 @@ void Paint_DrawBitMap(const unsigned char* image_buffer)
     UDOUBLE Addr = 0;
 
     for (y = 0; y < Paint.HeightByte; y++) {
-        for (x = 0; x < Paint.WidthByte; x++) {//8 pixel =  1 byte
+        for (x = 0; x < Paint.WidthByte; x++) {//8 像素 = 1 字节
             Addr = x + y * Paint.WidthByte;
             Paint.Image[Addr] = (unsigned char)image_buffer[Addr];
         }
@@ -753,7 +751,7 @@ void Paint_DrawBitMap_Block(const unsigned char* image_buffer, UBYTE Region)
     UWORD x, y;
     UDOUBLE Addr = 0;
 		for (y = 0; y < Paint.HeightByte; y++) {
-				for (x = 0; x < Paint.WidthByte; x++) {//8 pixel =  1 byte
+				for (x = 0; x < Paint.WidthByte; x++) {//8 像素 = 1 字节
 						Addr = x + y * Paint.WidthByte ;
 						Paint.Image[Addr] = \
 						(unsigned char)image_buffer[Addr+ (Paint.HeightByte)*Paint.WidthByte*(Region - 1)];

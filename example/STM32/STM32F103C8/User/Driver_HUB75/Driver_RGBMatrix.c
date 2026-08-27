@@ -108,8 +108,8 @@ static inline void HUB75_LatchRowFast(uint16_t scan_row)
   HUB75_OE_L();
 }
 /**
- * Initialization routine.
- * You might need to enable access to DWT registers on Cortex-M7
+ * 初始化例程。
+ * 在 Cortex-M7 上可能需要先开启 DWT 寄存器的访问权限：
  *   DWT->LAR = 0xC5ACCE55
  */
 void DWT_Init(void)
@@ -122,15 +122,15 @@ void DWT_Init(void)
 }
 
 /**
- * Delay routine itself.
- * Time is in microseconds (1/1000000th of a second), not to be
- * confused with millisecond (1/1000th).
+ * 延时例程本身。
+ * 时间单位为微秒（百万分之一秒），不要与
+ * 毫秒（千分之一秒）混淆。
  *
- * No need to check an overflow. Let it just tick :)
+ * 无需检查溢出，让它自然回绕即可 :)
  *
- * @param uint32_t us  Number of microseconds to delay for
+ * @param uint32_t us  需要延时的微秒数
  */
-void Delay_us(uint32_t us) // microseconds
+void Delay_us(uint32_t us) // 微秒
 {
     uint32_t startTick = DWT->CYCCNT,
              delayTicks = us * (SystemCoreClock/1000000);
@@ -162,8 +162,8 @@ void HUB75_Init(void)
   display_tick = 0U;
 }
 
-// Set refresh rate of the matrix
-// level: 1-4, 1: highest, 4: lowest
+// 设置点阵屏的刷新率
+// level：1-4，1 为最高，4 为最低
 void HUB75_SetRefreshRate(uint8_t level)
 {
   uint32_t arr = 0;
@@ -189,16 +189,16 @@ void HUB75_SetRefreshRate(uint8_t level)
 }
 
 /*
- * @brief  Set brightness of the matrix
- * @param brightness Brightness value (0-255)
- * @return None
+ * @brief  设置点阵屏的亮度
+ * @param  brightness 亮度值（0-255）
+ * @return 无
  */
 void HUB75_SetBrightness(uint8_t brightness)
 {
   hub75_oe_ticks = (uint16_t)brightness;
 }
 
-// Change the screen display time by controlling the OE pin
+// 通过控制 OE 引脚来改变屏幕的显示时长
 static void HUB75_OE_Window(void)
 {
   uint16_t ticks = hub75_oe_ticks;
@@ -224,34 +224,34 @@ void HUB75_WriteByte(uint8_t p_buff[], uint8_t color)
   uint8_t data_r1, data_g1, data_b1, data_r2, data_g2, data_b2 = 0;
   HUB75_OE_H();
 
-  /* write column data */
+  /* 写入列数据 */
   for(uint16_t i=0; i<(HUB75_PANEL_WIDTH/8); i++)
   {
     data_r1 = data_g1 = data_b1 = 0;
     data_r2 = data_g2 = data_b2 = 0;
 
-    /* color red */
+    /* 红色 */
     if(color & 0x01)
     {
       data_b1 = p_buff[row*(HUB75_PANEL_WIDTH/8)+i];
       data_b2 = p_buff[row*(HUB75_PANEL_WIDTH/8)+(HUB75_PANEL_WIDTH/8*HUB75_PANEL_HEIGHT/2)+i];
     }
 
-    /* color green */
+    /* 绿色 */
     if(color & 0x02)
     {
       data_r1 = p_buff[row*(HUB75_PANEL_WIDTH/8)+i];
       data_r2 = p_buff[row*(HUB75_PANEL_WIDTH/8)+(HUB75_PANEL_WIDTH/8*HUB75_PANEL_HEIGHT/2)+i];
     }
 
-    /* color blue */
+    /* 蓝色 */
     if(color & 0x04)
     {
       data_g1 = p_buff[row*(HUB75_PANEL_WIDTH/8)+i];
       data_g2 = p_buff[row*(HUB75_PANEL_WIDTH/8)+(HUB75_PANEL_WIDTH/8*HUB75_PANEL_HEIGHT/2)+i];
     }
 
-    /* horizontal 8 bits data */
+    /* 水平方向 8 位数据 */
     for(uint8_t k=0; k<8; k++)
     {
       ((data_r1>>(7-k)) & 0x01) ? HUB75_DR1_H() : HUB75_DR1_L();
@@ -349,7 +349,7 @@ void HUB75_WritePanel(uint8_t R, uint8_t G, uint8_t B, uint16_t row, uint16_t co
   p_plane2 = &hub75_panel_buff[row%(HUB75_PANEL_HEIGHT/2)*HUB75_PANEL_WIDTH+HUB75_PANEL_WIDTH*HUB75_PANEL_HEIGHT/2*1+column];
   p_plane3 = &hub75_panel_buff[row%(HUB75_PANEL_HEIGHT/2)*HUB75_PANEL_WIDTH+HUB75_PANEL_WIDTH*HUB75_PANEL_HEIGHT/2*2+column];
 
-  if(row < (HUB75_PANEL_HEIGHT/2))      //Top
+  if(row < (HUB75_PANEL_HEIGHT/2))      //上半屏
   {
     HUB75_AssignPackedBit(p_plane1, HUB75_PACK_TOP_R_BIT, (uint8_t)((R >> 6) & 0x01u));
     HUB75_AssignPackedBit(p_plane2, HUB75_PACK_TOP_R_BIT, (uint8_t)((R >> 5) & 0x01u));
@@ -363,7 +363,7 @@ void HUB75_WritePanel(uint8_t R, uint8_t G, uint8_t B, uint16_t row, uint16_t co
     HUB75_AssignPackedBit(p_plane2, HUB75_PACK_TOP_B_BIT, (uint8_t)((B >> 5) & 0x01u));
     HUB75_AssignPackedBit(p_plane3, HUB75_PACK_TOP_B_BIT, (uint8_t)((B >> 4) & 0x01u));
   }
-  else                                  //Bottom
+  else                                  //下半屏
   {
     HUB75_AssignPackedBit(p_plane1, HUB75_PACK_BOTTOM_R_BIT, (uint8_t)((R >> 6) & 0x01u));
     HUB75_AssignPackedBit(p_plane2, HUB75_PACK_BOTTOM_R_BIT, (uint8_t)((R >> 5) & 0x01u));
@@ -422,10 +422,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 }
 
 /*
- * @brief  Execute pending HUB75 display refresh steps gated by TIM1.
- * @note   TIM1 update interrupt accumulates pending scan steps in display_tick.
- *         This function drains all pending steps to avoid losing refresh slots.
- * @retval None
+ * @brief  执行由 TIM1 节流的、待处理的 HUB75 刷屏步骤。
+ * @note   TIM1 更新中断把待处理的扫描行累加到 display_tick 中，
+ *         本函数会一次性清空所有待处理步骤，避免丢失刷新时机。
+ * @retval 无
  */
 void HUB75_Display(void)
 {

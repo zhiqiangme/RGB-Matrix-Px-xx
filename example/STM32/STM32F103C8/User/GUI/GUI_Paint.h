@@ -5,7 +5,7 @@
 #include "../Fonts/fonts.h"
 
 /**
- * Image attributes
+ * 图像属性
 **/
 typedef struct {
     UWORD *Image;
@@ -23,7 +23,7 @@ typedef struct {
 extern PAINT Paint;
 
 /**
- * Display rotate
+ * 显示旋转
 **/
 #define ROTATE_0            0
 #define ROTATE_90           90
@@ -31,7 +31,7 @@ extern PAINT Paint;
 #define ROTATE_270          270
 
 /**
- * Display Flip
+ * 显示翻转
 **/
 typedef enum {
     MIRROR_NONE  = 0x00,
@@ -42,7 +42,7 @@ typedef enum {
 #define MIRROR_IMAGE_DFT MIRROR_NONE
 
 /**
- * image color
+ * 图像颜色
 **/
 #define WHITE          0xFFFF
 #define BLACK          0x0000
@@ -64,7 +64,7 @@ typedef enum {
 #define FONT_BACKGROUND     WHITE
 
 /**
- * The size of the point
+ * 点的大小
 **/
 typedef enum {
     DOT_PIXEL_1X1  = 1,	// 1 x 1
@@ -76,19 +76,19 @@ typedef enum {
     DOT_PIXEL_7X7  , 		// 7 X 7
     DOT_PIXEL_8X8  , 		// 8 X 8
 } DOT_PIXEL;
-#define DOT_PIXEL_DFT  DOT_PIXEL_1X1  //Default dot pilex
+#define DOT_PIXEL_DFT  DOT_PIXEL_1X1  //默认点像素
 
 /**
- * Point size fill style
+ * 点尺寸填充样式
 **/
 typedef enum {
-    DOT_FILL_AROUND  = 1,		// dot pixel 1 x 1
-    DOT_FILL_RIGHTUP  , 		// dot pixel 2 X 2
+    DOT_FILL_AROUND  = 1,		// 点像素 1 x 1
+    DOT_FILL_RIGHTUP  , 		// 点像素 2 X 2
 } DOT_STYLE;
-#define DOT_STYLE_DFT  DOT_FILL_AROUND  //Default dot pilex
+#define DOT_STYLE_DFT  DOT_FILL_AROUND  //默认点像素
 
 /**
- * Line style, solid or dashed
+ * 线样式，实线或虚线
 **/
 typedef enum {
     LINE_STYLE_SOLID = 0,
@@ -96,7 +96,7 @@ typedef enum {
 } LINE_STYLE;
 
 /**
- * Whether the graphic is filled
+ * 图形是否填充
 **/
 typedef enum {
     DRAW_FILL_EMPTY = 0,
@@ -104,7 +104,7 @@ typedef enum {
 } DRAW_FILL;
 
 /**
- * Custom structure of a time attribute
+ * 自定义时间属性结构体
 **/
 typedef struct {
     UWORD	Year;  //0000
@@ -116,7 +116,7 @@ typedef struct {
 } PAINT_TIME;
 extern PAINT_TIME sPaint_time;
 
-//init and Clear
+//初始化与清屏
 void Paint_NewImage(UWORD *image, UWORD Width, UWORD Height, UWORD Rotate, UWORD Color);
 void Paint_SelectImage(UWORD *image);
 void Paint_SetRotate(UWORD Rotate);
@@ -127,20 +127,20 @@ void Paint_SetScale(UBYTE scale);
 void Paint_Clear(UWORD Color);
 void Paint_ClearWindows(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color);
 
-//Drawing
+//绘图
 void Paint_DrawPoint(UWORD Xpoint, UWORD Ypoint, UWORD Color, DOT_PIXEL Dot_Pixel, DOT_STYLE Dot_FillWay);
 void Paint_DrawLine(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, LINE_STYLE Line_Style);
 void Paint_DrawRectangle(UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
 void Paint_DrawCircle(UWORD X_Center, UWORD Y_Center, UWORD Radius, UWORD Color, DOT_PIXEL Line_width, DRAW_FILL Draw_Fill);
 
-//Display string
+//显示字符串
 void Paint_DrawChar(UWORD Xstart, UWORD Ystart, const char Acsii_Char, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_EN(UWORD Xstart, UWORD Ystart, const char * pString, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawString_CN(UWORD Xstart, UWORD Ystart, const char * pString, cFONT* font, UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawNum(UWORD Xpoint, UWORD Ypoint, double Nummber, sFONT* Font, UWORD Digit,UWORD Color_Foreground, UWORD Color_Background);
 void Paint_DrawTime(UWORD Xstart, UWORD Ystart, PAINT_TIME *pTime, sFONT* Font, UWORD Color_Foreground, UWORD Color_Background);
 
-//pic
+//图片
 void Paint_DrawBitMap(const unsigned char* image_buffer);
 void Paint_DrawBitMap_Block(const unsigned char* image_buffer, UBYTE Region);
 

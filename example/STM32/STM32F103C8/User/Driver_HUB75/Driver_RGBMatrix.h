@@ -15,7 +15,7 @@
 #define UWORD   uint16_t
 #define UDOUBLE uint32_t
 
-/* hub75 interface definition */
+/* HUB75 接口定义 */
 #define HUB75_PANEL_PROFILE_64X32_1_16 (1u)
 #define HUB75_PANEL_PROFILE_64X64_1_32 (2u)
 #define HUB75_PANEL_PROFILE_80X40_1_20 (3u)
@@ -104,7 +104,7 @@
 #define HUB75_E_H()              (E_GPIO_Port->BSRR = E_Pin)
 #define HUB75_E_L()              (E_GPIO_Port->BSRR = (uint32_t)E_Pin << 16u)
 
-/* hub75 color definition */
+/* HUB75 颜色定义 */
 typedef enum
 {
   HUB75_Color_Black       = 00U,
@@ -138,7 +138,7 @@ void HUB75_Display(void);
 void HUB75_WriteByte(uint8_t p_buff[], uint8_t color);
 void HUB75_WritePixel(uint8_t p_buff[]);
 void HUB75_WritePanel(uint8_t R, uint8_t G, uint8_t B, uint16_t row, uint16_t column);
-void HUB75_LoadRGB565Frame(const uint16_t *frame, uint16_t width, uint16_t height);// load rgb565 frame to hub75 panel，if the frame is NULL，then clear the panel with black color
+void HUB75_LoadRGB565Frame(const uint16_t *frame, uint16_t width, uint16_t height);// 将 RGB565 帧载入 HUB75 面板；若 frame 为 NULL，则用黑色清屏
 void HUB75_SetBrightness(uint8_t brightness);
 void HUB75_SetRefreshRate(uint8_t level);
 
